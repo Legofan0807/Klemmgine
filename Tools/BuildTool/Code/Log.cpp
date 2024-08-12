@@ -7,12 +7,12 @@ std::string MessageTypeStrings[3] =
 	"[Warning]",
 	"[Error]",
 };
+bool IsVerbose = false;
 
 #if _WIN32
 #include <Windows.h>
 #include <wincon.h>
 
-bool IsVerbose = false;
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 unsigned int MessageTypeMajorColors[3] =
 {
@@ -70,5 +70,23 @@ void Log::Print(std::string Message, MessageType NativeType, std::string LogClas
 	}
 	std::cout << LogClass;
 	std::cout << ": " << Message << std::endl;
+}
+
+void Log::PrintVerbose(std::string Message)
+{
+	if (IsVerbose)
+	{
+		Log::Print(Message);
+	}
+}
+
+void Log::SetIsVerbose(bool NewIsVerbose)
+{
+	IsVerbose = NewIsVerbose;
+}
+
+bool Log::GetIsVerbose()
+{
+	return IsVerbose;
 }
 #endif

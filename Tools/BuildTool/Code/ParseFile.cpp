@@ -176,7 +176,7 @@ std::vector<ParseFile::Object> ParseFile::ParseFile(std::string Path)
 				}
 			}
 
-			Log::Print("Possible class: " + NewObject.Name);
+			Log::PrintVerbose("Possible class: " + NewObject.Name);
 			OutObjects.push_back(NewObject);
 			
 		}
@@ -198,7 +198,7 @@ void ParseFile::WriteToFile(std::string str, std::string File)
 		CurrentFile.close();
 		if (str == s.str())
 		{
-			Log::Print("Do not need to write: " + File + ". File has not changed.");
+			Log::PrintVerbose("Do not need to write: " + File + ". File has not changed.");
 			return;
 		}
 	}

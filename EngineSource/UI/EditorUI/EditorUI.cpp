@@ -36,7 +36,6 @@
 #include <UI/EditorUI/SerializePanel.h>
 #include <Engine/Utility/StringUtility.h>
 
-int EditorUI::NumLaunchClients = 1;
 TextRenderer* EditorUI::Text = nullptr;
 TextRenderer* EditorUI::MonoText = nullptr;
 EditorPanel* EditorUI::RootPanel = nullptr;
@@ -59,13 +58,6 @@ namespace Editor
 	Vector2 DragMinMax;
 	Vector2 NewDragMinMax = DragMinMax;
 	bool IsSavingScene = false;
-	bool LaunchCurrentScene = true;
-	bool SaveSceneOnLaunch = false;
-	bool ReloadingCSharp = false;
-	DialogBox* CSharpReloadBox = nullptr;
-
-	bool Rebuilding = false;
-	DialogBox* RebuildingBox = nullptr;
 
 	Vector3 NewUIColors[EditorUI::NumUIColors] =
 	{
@@ -89,15 +81,14 @@ namespace Editor
 
 		return PrevColor;
 	}
-	std::atomic<bool> CanHotreload = false;
 
 	struct ProcessInfo
 	{
 		std::string Command;
 		FILE* Pipe = nullptr;
-		std::string LogPrefix;
 		std::thread* Thread = nullptr;
 		std::atomic<bool> Active = false;
+		std::function<void(std::string)> PrintFunction;
 		bool Async = false;
 	};
 
@@ -110,7 +101,7 @@ namespace Editor
 
 			if (NewChar == '\n')
 			{
-				Log::Print(Info->LogPrefix + CurrentMessage);
+				Info->PrintFunction(CurrentMessage);
 				CurrentMessage.clear();
 			}
 			else
@@ -136,247 +127,28 @@ namespace UI
 
 bool EditorUI::ChangedScene = false;
 bool EditorUI::IsBakingScene = false;
-std::string EditorUI::LaunchInEditorArgs;
-bool EditorUI::LaunchWithServer = false;
-static std::string LaunchCommandLine;
-
-static std::string EditorBuildCMakeConfiguration(std::string Configuration, std::string Name, std::string BuildArgs)
-{
-	std::string MsBuildConfig = Build::CMake::GetMSBuildConfig();
-
-#if _WIN32
-	std::string ExecExtension = ".exe";
-#else
-	std::string ExecExtension = "";
-#endif
-
-	std::string ExecutablePath = Build::CMake::GetBuildRootPath(Configuration) + "\\";
-	if (std::filesystem::exists(ExecutablePath + MsBuildConfig))
-	{
-		ExecutablePath.append(MsBuildConfig + "\\");
-	}
-
-	std::string Executable = ExecutablePath + Name + ExecExtension;
-
-	if (!std::filesystem::exists(Executable)
-		|| std::filesystem::last_write_time(Executable) < FileUtil::GetLastWriteTimeOfFolder("Code", { "x64" }))
-	{
-		Editor::Rebuilding = true;
-		Log::Print("Found changes to source code - building with configuration: " + Configuration, Log::LogColor::Yellow);
-		Build::CMake::BuildWithConfig(Configuration, BuildArgs);
-
-		// Re-check for a configuration folder, in case this is the first time building.
-		if (std::filesystem::exists(ExecutablePath + MsBuildConfig))
-		{
-			ExecutablePath.append(MsBuildConfig + "\\");
-			Executable = ExecutablePath + Name + ExecExtension;
-		}
-	}
-
-	return Executable;
-}
 
 void EditorUI::LaunchInEditor()
 {
-	std::string ProjectName = Build::GetProjectBuildName();
-	std::string ExecutablePath = "", ServerExecutablePath = "";
-	try
-	{
-#if !ENGINE_NO_SOURCE
-		// No Solution -> no build name -> probably using CMake on windows.
-		if (Build::CMake::IsUsingCMake())
-		{
-			ExecutablePath = EditorBuildCMakeConfiguration("x64-Debug", ProjectName, "");
-			if (NetworkSubsystem::IsActive())
-			{
-				ServerExecutablePath = EditorBuildCMakeConfiguration("x64-Server", ProjectName, "-DSERVER=ON");
-			}
-		}
-#if _WIN32
-		else
-		{
-			ExecutablePath = "bin\\" + ProjectName + "-Debug.exe";
-			if (!std::filesystem::exists(ExecutablePath)
-				|| std::filesystem::last_write_time(ExecutablePath) < FileUtil::GetLastWriteTimeOfFolder("Code", { "x64" }))
-			{
-				Editor::Rebuilding = true;
-				Log::Print("Detected uncompiled changes to C++ code. Rebuilding...", Log::LogColor::Yellow);
-				if (Build::BuildCurrentSolution("Debug"))
-				{
-					Log::Print("Build for configuration 'Debug' failed. Cannot launch project.", Log::LogColor::Red);
-					Editor::Rebuilding = false;
-					return;
-				}
-			}
-
-			ServerExecutablePath = "bin\\" + ProjectName + "-Server.exe";
-			if (LaunchWithServer 
-				&& (!std::filesystem::exists(ServerExecutablePath)
-					|| std::filesystem::last_write_time(ServerExecutablePath) < FileUtil::GetLastWriteTimeOfFolder("Code", { "x64" })))
-			{
-				Editor::Rebuilding = true;
-				if (Build::BuildCurrentSolution("Server"))
-				{
-					Log::Print("Build for configuration 'Debug' failed. Cannot launch project.", Log::LogColor::Red);
-					Editor::Rebuilding = false;
-					return;
-				}
-			}
-		}
-#endif // WIN32
-		Editor::Rebuilding = false;
-#endif // !ENGINE_NO_SOURCE
-
-#if ENGINE_NO_SOURCE || __linux__
-#if !ENGINE_NO_SOURCE
-		if (!Build::CMake::IsUsingCMake())
-#endif
-		{
-			ProjectName = "Klemmgine";
-			ExecutablePath = "bin\\" + ProjectName + "-Debug";
-			ServerExecutablePath = "bin\\" + ProjectName + "-Server";
-		}
-#if _WIN32
-		ExecutablePath.append(".exe");
-		ServerExecutablePath.append(".exe");
-#endif
-#endif // ENGINE_NO_SOURCE || __linux__
-
-#ifdef ENGINE_CSHARP
-		if ((!std::filesystem::exists("CSharp/Build/CSharpAssembly.dll")
-			|| std::filesystem::last_write_time("CSharp/Build/CSharpAssembly.dll") < FileUtil::GetLastWriteTimeOfFolder("Scripts", { "obj" }))
-			&& CSharpInterop::GetUseCSharp())
-		{
-			if (!RebuildAssembly())
-			{
-				Log::Print("Failed to build C# assembly.", Log::LogColor::Red);
-				return;
-			}
-		}
-#endif
-	}
-	catch (std::exception& e)
-	{
-		Log::Print("Exception thrown when trying to check for rebuild. " + std::string(e.what()), Log::LogColor::Red);
-		return;
-	}
-
-	if (Editor::SaveSceneOnLaunch)
-	{
-		Application::EditorInstance->ShouldSave = true;
-	}
-
-	std::string Args = LaunchInEditorArgs;
-	if (Editor::LaunchCurrentScene)
-	{
-		Args.append(" -scene " + FileUtil::GetFileNameFromPath(Scene::CurrentScene));
-	}
-
-#if __linux__
-	StrUtil::ReplaceChar(ExecutablePath, '\\', "/");
-#endif
-
-	// -nostartupinfo: Do not show any version information on startup, this just clutters the editor log.
-	// -nocolor: Do not print any color. The editor log ignores it anyways, and on Linux this just puts color codes everywhere.
-	std::string CommandLine = ExecutablePath + " -nostartupinfo -nocolor -editorPath " + Application::GetEditorPath() + " " + Args;
-
-	if (LaunchWithServer)
-	{
-		CommandLine.append(" -connect localhost ");
-	}
-
-	Log::Print("[Debug]: Starting process: " + CommandLine, Log::LogColor::Blue);
-	int ret = 0;
-	std::string Command;
-#if _WIN32
-	for (int i = 0; i < NumLaunchClients; i++)
-	{
-		Command.append("start /b " + CommandLine);
-		if (i < NumLaunchClients - 1)
-		{
-			Command.append(" && ");
-		}
-	}
-
-	// If only one new process is created, write the output of that process to the log.
-	// With multiple processes this gets very confusing.
-	if (NumLaunchClients == 1)
-	{
-		new BackgroundTask([Command]() { PipeProcessToLog(Command, "[Debug]: "); });
-	}
-	else
-	{
-		new BackgroundTask([Command]() { int ret = system(Command.c_str()); });
-	}
-#else
-	for (int i = 0; i < NumLaunchClients; i++)
-	{
-		LaunchCommandLine = CommandLine;
-		if (NumLaunchClients == 1)
-		{
-			PipeProcessToLog(LaunchCommandLine, "[Debug]: ");
-}
-		else
-		{
-			new BackgroundTask([]() { system((LaunchCommandLine).c_str()); });
-		}
-	}
-#endif
-	if (LaunchWithServer)
-	{
-#if _WIN32
-		ret = system(("start " + ServerExecutablePath + " -nostartupinfo -quitondisconnect -editorPath "
-			+ Application::GetEditorPath()
-			+ " "
-			+ Args).c_str());
-#else
-		ret = system(("./bin/"
-		 + ProjectName 
-		 + "-Server -nostartupinfo -quitondisconnect -editorPath "
-		 + Application::GetEditorPath()
-		 + " "
-		 + Args + " &").c_str());
-#endif
-	}
-}
-
-void EditorUI::SetSaveSceneOnLaunch(bool NewValue)
-{
-	Editor::SaveSceneOnLaunch = NewValue;
-}
-
-#ifdef ENGINE_CSHARP
-bool EditorUI::RebuildAssembly()
-{
-	Editor::ReloadingCSharp = true;
-	bool Success = PipeProcessToLog("cd Scripts && dotnet build", "[C#]: [Build]: ") == 0;
-	Editor::ReloadingCSharp = false;
-	Editor::CanHotreload = Success;
-	return Success;
-}
-#endif
-
-void EditorUI::SetLaunchCurrentScene(bool NewLaunch)
-{
-	Editor::LaunchCurrentScene = NewLaunch;
+	static_cast<EditorBuild*>(Subsystem::GetSubsystemByName("Build"))->Run();
 }
 
 void EditorUI::SaveCurrentScene()
 {
 	if (Scene::CurrentScene.empty())
 	{
-		Application::EditorInstance->Print("Saving scene \"Untitled\"");
+		Application::EditorInstance->Print("Saving scene \"Untitled\"", ErrorLevel::ImportantInfo);
 		Scene::SaveSceneAs("Content/Untitled");
 		Scene::CurrentScene = "Content/Untitled";
 	}
 	else
 	{
-		Application::EditorInstance->Print("Saving scene \"" + FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + "\"");
+		Application::EditorInstance->Print("Saving scene \"" + FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + "\"", ErrorLevel::ImportantInfo);
 		Scene::SaveSceneAs(Scene::CurrentScene);
 	}
 	ChangedScene = false;
 	AssetBrowser::UpdateAll();
-	UpdateAllInstancesOf<ObjectList>();
+	EditorPanel::UpdateAllInstancesOf<ObjectList>();
 }
 
 void EditorUI::OpenScene(std::string NewScene)
@@ -393,7 +165,7 @@ void EditorUI::OpenScene(std::string NewScene)
 					ChangedScene = false;
 					Scene::LoadNewScene(NewScene, true);
 					Viewport::ViewportInstance->ClearSelectedObjects();
-					UpdateAllInstancesOf<ContextMenu>();
+					EditorPanel::UpdateAllInstancesOf<ContextMenu>();
 				}),
 
 				EditorPopup::PopupOption("No", [NewScene]()
@@ -401,7 +173,7 @@ void EditorUI::OpenScene(std::string NewScene)
 					ChangedScene = false;
 					Scene::LoadNewScene(NewScene, true);
 					Viewport::ViewportInstance->ClearSelectedObjects();
-					UpdateAllInstancesOf<ContextMenu>();
+					EditorPanel::UpdateAllInstancesOf<ContextMenu>();
 				}),
 
 				EditorPopup::PopupOption("Cancel", nullptr)
@@ -413,7 +185,7 @@ void EditorUI::OpenScene(std::string NewScene)
 
 	EditorUI::SelectedObjects.clear();
 
-	UpdateAllInstancesOf<ContextMenu>();
+	EditorPanel::UpdateAllInstancesOf<ContextMenu>();
 }
 
 bool EditorUI::GetUseLightMode()
@@ -495,7 +267,7 @@ void EditorUI::LoadPanelLayout(EditorPanel* From)
 	RootPanel = From;
 }
 
-int EditorUI::PipeProcessToLog(std::string Command, std::string Prefix)
+int EditorUI::PipeProcessToLog(std::string Command, std::function<void(std::string)> PrintFunction)
 {
 	using namespace Editor;
 
@@ -507,11 +279,10 @@ int EditorUI::PipeProcessToLog(std::string Command, std::string Prefix)
 
 	ProcessInfo proc;
 
-	proc.LogPrefix = Prefix;
 	proc.Active = true;
 	proc.Command = Command;
 	proc.Pipe = process;
-
+	proc.PrintFunction = PrintFunction;
 	return ReadProcessPipe(process, &proc);
 }
 
@@ -536,6 +307,8 @@ EditorUI::EditorUI()
 	MonoText = new TextRenderer(Application::GetEditorPath() + "/EditorContent/EditorMonospace.ttf");
 	Input::CursorVisible = true;
 	LoadEditorTextures();
+
+	Subsystem::Load(new EditorBuild());
 
 	if (std::filesystem::exists(Editor::SerializePanel::GetLayoutPrefFilePath() + ".pref"))
 	{
@@ -576,7 +349,6 @@ EditorUI::EditorUI()
 
 	Console::ConsoleSystem->RegisterCommand(Console::Command("toggle_light", []() { EditorUI::SetUseLightMode(!EditorUI::GetUseLightMode()); }, {}));
 #ifdef ENGINE_CSHARP
-	Console::ConsoleSystem->RegisterCommand(Console::Command("reload", EditorUI::RebuildAssembly, {}));
 	Console::ConsoleSystem->RegisterCommand(Console::Command("run", EditorUI::LaunchInEditor, {}));
 
 #endif
@@ -608,52 +380,12 @@ void EditorUI::Update()
 {
 	EditorPanel::TickPanels();
 	Window::SetWindowTitle(StrUtil::Format("%s.jscn - %s", Scene::CurrentScene.c_str(), Project::ProjectName));
-#ifdef ENGINE_CSHARP
-	if (Editor::CanHotreload == true)
-	{
-		Print("Finished building assembly. Reloading .dll file.", Subsystem::ErrorLevel::Info);
-		CSharpInterop::CSharpSystem->ReloadCSharpAssembly();
-		for (UICanvas* c : Graphics::UIToRender)
-		{
-			auto Browser = dynamic_cast<ClassesBrowser*>(c);
-			if (Browser)
-			{
-				Browser->UpdateClasses();
-			}
-		}
-
-		UpdateAllInstancesOf<ClassesBrowser>();
-
-		Editor::CanHotreload = false;
-	}
-#endif
-
 	if (BakedLighting::FinishedBaking)
 	{
 		BakedLighting::FinishedBaking = false;
 		EditorUI::IsBakingScene = false;
 		Assets::ScanForAssets();
 		BakedLighting::LoadBakeFile(FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene));
-	}
-
-	if (Editor::ReloadingCSharp && !Editor::CSharpReloadBox)
-	{
-		Editor::CSharpReloadBox = new DialogBox("C#", 0, "Rebuilding C# assembly... Check log for details.", {});
-	}
-	else if (!Editor::ReloadingCSharp && Editor::CSharpReloadBox)
-	{
-		delete Editor::CSharpReloadBox;
-		Editor::CSharpReloadBox = nullptr;
-	}
-
-	if (Editor::Rebuilding && !Editor::RebuildingBox)
-	{
-		Editor::RebuildingBox = new DialogBox("Build", 0, "Compiling game...", {});
-	}
-	else if (!Editor::Rebuilding && Editor::RebuildingBox)
-	{
-		delete Editor::RebuildingBox;
-		Editor::RebuildingBox = nullptr;
 	}
 
 	if (dynamic_cast<UIButton*>(UI::HoveredBox))
@@ -701,8 +433,8 @@ void EditorUI::Update()
 
 void EditorUI::OnObjectSelected()
 {
-	UpdateAllInstancesOf<ContextMenu>();
-	UpdateAllInstancesOf<ObjectList>();
+	EditorPanel::UpdateAllInstancesOf<ContextMenu>();
+	EditorPanel::UpdateAllInstancesOf<ObjectList>();
 }
 
 std::string EditorUI::ToShortString(float val)

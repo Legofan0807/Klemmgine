@@ -19,6 +19,7 @@
 - Replaced some instances of `int` with `int*_t` or `size_t`.
 - Fixed an incorrect compare function for the shader map.
 - Fixed the engine failing to compile with `KLEMMGINE_NO_CSHARP`.
+- Fixed an issue where the UI wouldn't be redrawn entirely when it should've been.
 
 ## Version 1.13.2
 

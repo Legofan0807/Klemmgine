@@ -394,7 +394,7 @@ void Viewport::Tick()
 		PressedLMB = false;
 		if (Dragging)
 		{
-			EditorUI::UpdateAllInstancesOf<ContextMenu>();
+			EditorPanel::UpdateAllInstancesOf<ContextMenu>();
 			Dragging = false;
 		}
 	}

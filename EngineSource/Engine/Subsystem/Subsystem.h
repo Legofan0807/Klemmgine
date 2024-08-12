@@ -49,6 +49,8 @@ public:
 	{
 		/// Info level. White color.
 		Info,
+		/// Important info level. Blue color. 
+		ImportantInfo,
 		/// Warn level. Yellow color.
 		Warn,
 		/// Error level. Red color.

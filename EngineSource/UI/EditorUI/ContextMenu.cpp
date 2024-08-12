@@ -480,7 +480,7 @@ void ContextMenu::OnButtonClicked(int Index)
 						break;
 					case NativeType::String:
 						*(std::string*)(ContextSettings[IteratedElement].Variable) = ((UITextField*)ContextButtons[i])->GetText();
-						EditorUI::UpdateAllInstancesOf<ObjectList>();
+						EditorPanel::UpdateAllInstancesOf<ObjectList>();
 						break;
 					case NativeType::Bool:
 						if (((UIButton*)ContextButtons[i])->GetIsHovered())

@@ -11,8 +11,9 @@
 #include <UI/EditorUI/SettingsPanel.h>
 #include <UI/EditorUI/Popups/BakeMenu.h>
 #include <Engine/Application.h>
+#include <Engine/Subsystem/BackgroundTask.h>
 
-#define MAX_CATEGORY_BUTTONS 16
+constexpr uint8_t MAX_CATEGORY_BUTTONS = 16;
 
 Toolbar* Toolbar::ToolbarInstance = nullptr;
 
@@ -97,9 +98,9 @@ void Toolbar::SetButtonVisibility(std::string Name, bool IsVisible)
 Toolbar::Toolbar(EditorPanel* Parent) : EditorPanel(Parent, "Toolbar", "toolbar")
 {
 	ToolbarInstance = this;
-	RegisterNewButtonCategory(ButtonCategory("Scene", 
+	RegisterNewButtonCategory(ButtonCategory("Scene",
 		{
-			ButtonCategory::Button("Save", Application::EditorInstance->Textures[2], []() 
+			ButtonCategory::Button("Save", Application::EditorInstance->Textures[2], []()
 				{
 					EditorUI::SaveCurrentScene();
 				}),
@@ -108,21 +109,29 @@ Toolbar::Toolbar(EditorPanel* Parent) : EditorPanel(Parent, "Toolbar", "toolbar"
 					Log::Print("Toggled wireframe", Vector3(0.3f, 0.4f, 1));
 					Graphics::IsWireframe = !Graphics::IsWireframe;
 				}),
-			ButtonCategory::Button("Bake", Application::EditorInstance->Textures[27], []() 
+			ButtonCategory::Button("Bake", Application::EditorInstance->Textures[27], []()
 				{
 					new BakeMenu();
 				})
 		}));
 	RegisterNewButtonCategory(ButtonCategory("Project",
 		{
-			
-			ButtonCategory::Button("Settings", Application::EditorInstance->Textures[20], []() {
+
+			ButtonCategory::Button("Settings", Application::EditorInstance->Textures[20], []()
+				{
 					SettingsPanel::NewSettingsPanel();
 				}),
-			ButtonCategory::Button("Build", Application::EditorInstance->Textures[3], []() { new std::thread(Build::TryBuildProject, "GameBuild/"); }),
+			ButtonCategory::Button("Build", Application::EditorInstance->Textures[3], []() 
+				{
+					new BackgroundTask([]()
+					{
+						Build::TryBuildProject("GameBuild/");
+					});
+				}),
 			ButtonCategory::Button("Run", Application::EditorInstance->Textures[21], []()
 				{
-					new std::thread([]() {
+					new BackgroundTask([]()
+					{
 						EditorUI::LaunchInEditor();
 					});
 				})
@@ -131,7 +140,13 @@ Toolbar::Toolbar(EditorPanel* Parent) : EditorPanel(Parent, "Toolbar", "toolbar"
 #ifdef ENGINE_CSHARP
 	RegisterNewButtonCategory(ButtonCategory("C#",
 		{
-			ButtonCategory::Button("Reload C#", Application::EditorInstance->Textures[12], []() { new std::thread(EditorUI::RebuildAssembly); }),
+			ButtonCategory::Button("Reload C#", Application::EditorInstance->Textures[12], []()
+				{
+					new BackgroundTask([]()
+					{
+						static_cast<EditorBuild*>(Subsystem::GetSubsystemByName("Build"))->RebuildAssembly();
+					});
+				}),
 		}));
 #endif
 

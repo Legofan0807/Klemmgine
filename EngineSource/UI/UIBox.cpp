@@ -22,6 +22,7 @@ namespace UI
 	std::set<UIBox*> ElementsToUpdate;
 	std::vector<UIBox*> UIElements;
 	bool RequiresRedraw = true;
+	static bool RedrawingAll = false;
 	unsigned int UIBuffer = 0;
 	unsigned int UITextures[2] = {0, 0};
 }
@@ -213,10 +214,13 @@ unsigned int* UIBox::GetUITextures()
 }
 void UIBox::RedrawUI()
 {
+	UI::RedrawingAll = false;
+	RedrawBoxes.clear();
 	RedrawArea(RedrawBox{
 		.Min = -1,
 		.Max = 1,
 		});
+	UI::RedrawingAll = true;
 }
 
 void UIBox::ClearUI()
@@ -231,7 +235,7 @@ void UIBox::ClearUI()
 		}
 	}
 	UI::UIElements.clear();
-	UI::RequiresRedraw = true;
+	RedrawUI();
 }
 
 void UIBox::UpdateUI()
@@ -435,6 +439,11 @@ void UIBox::RedrawElement()
 
 void UIBox::RedrawArea(RedrawBox Box)
 {
+	if (UI::RedrawingAll)
+	{
+		return;
+	}
+
 	// Do nto redraw the element if it's position has not yet been initialized.
 	// It will be redrawn once the position has been set anyways.
 	if (std::isnan(Box.Min.X) || std::isnan(Box.Min.Y)
@@ -449,7 +458,6 @@ void UIBox::RedrawArea(RedrawBox Box)
 
 	if (RedrawBoxes.size() > 8)
 	{
-		RedrawBoxes.clear();
 		RedrawUI();
 	}
 
@@ -713,7 +721,6 @@ void UIBox::InvalidateLayout()
 	{
 		UI::ElementsToUpdate.insert(this);
 	}
-
 }
 
 UIBox* UIBox::AddChild(UIBox* NewChild)
@@ -791,6 +798,7 @@ void UIBox::DrawAllUIElements()
 	if (UI::RequiresRedraw)
 	{
 		UI::RequiresRedraw = false;
+		UI::RedrawingAll = false;
 		glViewport(0, 0, (size_t)Graphics::WindowResolution.X, (size_t)Graphics::WindowResolution.Y);
 		glEnable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
@@ -807,7 +815,6 @@ void UIBox::DrawAllUIElements()
 
 			Vector2 Pos = (i.Min / 2 + 0.5f) * Graphics::WindowResolution;
 			Vector2 Res = (i.Max - i.Min) / 2 * Graphics::WindowResolution;
-
 
 			glScissor(
 				(GLsizei)Pos.X,

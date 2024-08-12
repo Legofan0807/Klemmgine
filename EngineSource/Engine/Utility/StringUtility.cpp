@@ -68,7 +68,10 @@ std::vector<std::string> StrUtil::SeparateString(std::string Value, char Sep)
 		}
 		else
 		{
-			Values.push_back(New);
+			if (New.size())
+			{
+				Values.push_back(New);
+			}
 			New.clear();
 		}
 	}

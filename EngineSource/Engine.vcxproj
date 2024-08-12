@@ -42,6 +42,7 @@
     <ClCompile Include="UI\EditorUI\AssetBrowser.cpp" />
     <ClCompile Include="UI\EditorUI\ClassesBrowser.cpp" />
     <ClCompile Include="UI\EditorUI\EditorDropdown.cpp" />
+    <ClCompile Include="UI\EditorUI\EditorSubsystem\EditorBuild.cpp" />
     <ClCompile Include="UI\EditorUI\EditorSubsystem\EditorSubsystem.cpp" />
     <ClCompile Include="UI\EditorUI\Popups\AboutWindow.cpp" />
     <ClCompile Include="Engine\Subsystem\CSharpInterop.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="UI\EditorUI\ClassesBrowser.h" />
     <ClInclude Include="Math\Collision\CollisionVisualize.h" />
     <ClInclude Include="UI\EditorUI\EditorDropdown.h" />
+    <ClInclude Include="UI\EditorUI\EditorSubsystem\EditorBuild.h" />
     <ClInclude Include="UI\EditorUI\EditorSubsystem\EditorSubsystem.h" />
     <ClInclude Include="UI\EditorUI\Popups\AboutWindow.h" />
     <ClInclude Include="Engine\Subsystem\CSharpInterop.h" />

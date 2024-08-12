@@ -31,7 +31,7 @@ public:
 
 	void UpdateOcclusionStatus(Model* m);
 
-	void CheckQueries(FramebufferObject* Buffer);
+	void QueryAllOccluded(FramebufferObject* Buffer);
 
 	void FreeOcclusionQuery(uint8_t Index);
 

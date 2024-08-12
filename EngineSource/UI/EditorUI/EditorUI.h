@@ -34,13 +34,6 @@ struct SDL_Cursor;
 class EditorUI : public EditorSubsystem
 {
 public:
-#if ENGINE_CSHARP
-	/**
-	* @brief
-	* Rebuilds the project's CSharpAssembly and reloads it.
-	*/
-	static bool RebuildAssembly();
-#endif
 	
 	/**
 	* @brief 
@@ -50,9 +43,6 @@ public:
 	* It will also detect changes to the C# code in {ProjectPath}/Scripts and rebuild it as well.
 	*/
 	static void LaunchInEditor();
-	static void SetSaveSceneOnLaunch(bool NewValue);
-	static std::string LaunchInEditorArgs;
-	static void SetLaunchCurrentScene(bool NewLaunch);
 
 	/**
 	* @brief
@@ -81,40 +71,7 @@ public:
 
 	static void LoadPanelLayout(EditorPanel* From);
 
-	static int NumLaunchClients;
-	static bool LaunchWithServer;
 	static bool ChangedScene;
-
-	/**
-	* @brief
-	* Calls the OnResized() function on all EditorPanel instances of the type T.
-	* 
-	* @tparam T
-	* The type of EditorPanel that should be updated.
-	*/
-	template<typename T>
-	static void UpdateAllInstancesOf()
-	{
-		auto All = GetAllInstancesOf<T>();
-		for (T* c : All)
-		{
-			c->OnResized();
-		}
-	}
-
-	template<typename T>
-	static std::vector<T*> GetAllInstancesOf()
-	{
-		std::vector<T*> All;
-		for (UICanvas* c : Graphics::UIToRender)
-		{
-			if (dynamic_cast<T*>(c))
-			{
-				All.push_back(static_cast<T*>(c));
-			}
-		}
-		return All;
-	}
 
 	/**
 	* @brief
@@ -126,7 +83,7 @@ public:
 	* @param Prefix
 	* Log prefix added to the output of the command.
 	*/
-	static int PipeProcessToLog(std::string Command, std::string Prefix = "");
+	static int PipeProcessToLog(std::string Command, std::function<void(std::string)> PrintFunction);
 
 	/**
 	* @brief
@@ -213,10 +170,10 @@ public:
 
 	static CursorType CurrentCursor;
 	static std::vector<unsigned int> Textures;
+	bool ShouldSave = false;
 
 protected:
 	SDL_Cursor* Cursors[(int)CursorType::End];
-	bool ShouldSave = false;
 public:
 	static std::vector<SceneObject*> SelectedObjects;
 	static void OnObjectSelected();

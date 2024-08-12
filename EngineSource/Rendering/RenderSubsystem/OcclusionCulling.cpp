@@ -30,6 +30,7 @@ bool OcclusionCulling::RenderOccluded(Model* m, size_t i, FramebufferObject* Buf
 		return false;
 	}
 
+	// Various conditions where the model should not be culled.
 	if (!Active
 		|| (m->Size.extents * m->ModelTransform.Scale).Length() > 500.0f
 		|| (!m->IsOcclusionCulled && i != Stats::FrameCount % Buffer->Renderables.size())
@@ -40,14 +41,19 @@ bool OcclusionCulling::RenderOccluded(Model* m, size_t i, FramebufferObject* Buf
 		return true;
 	}
 
+	// If the model is already running a query...
 	if (m->RunningQuery)
 	{
+		// Render the model if the last query said it's visible.
 		if (!m->IsOcclusionCulled)
 		{
 			m->Render(Buffer->FramebufferCamera, Buffer == Graphics::MainFramebuffer, false);
 		}
+
 		return !m->IsOcclusionCulled;
 	}
+
+	// If the model isn't running a query, add it to a stack to query it later in QueryAllOccluded()
 	if (m->IsOcclusionCulled)
 	{
 		CulledModels.push(m);
@@ -150,7 +156,7 @@ void OcclusionCulling::UpdateOcclusionStatus(Model* m)
 
 }
 
-void OcclusionCulling::CheckQueries(FramebufferObject* Buffer)
+void OcclusionCulling::QueryAllOccluded(FramebufferObject* Buffer)
 {
 	while (!OcclusionCulling::CulledModels.empty())
 	{

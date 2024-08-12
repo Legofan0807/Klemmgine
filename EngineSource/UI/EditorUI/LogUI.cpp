@@ -73,7 +73,7 @@ void LogUI::OnResized()
 
 void LogUI::PrintUIElement(UIBox* Element)
 {
-	auto AllLogs = EditorUI::GetAllInstancesOf<LogUI>();
+	auto AllLogs = EditorPanel::GetAllInstancesOf<LogUI>();
 
 	for (LogUI* i : AllLogs)
 	{

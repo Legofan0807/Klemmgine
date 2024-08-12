@@ -106,7 +106,12 @@ static std::vector<MenuBarItem> MenuBarItems =
 	MenuBarItem("C#",
 		{
 			MenuBarEntry("Open Solution", []() { OS::OpenFile(Build::GetProjectBuildName() + ".sln"); }),
-			MenuBarEntry("Rebuild C# Assembly", []() { new BackgroundTask(EditorUI::RebuildAssembly); }),
+			MenuBarEntry("Rebuild C# Assembly", []() 
+				{new BackgroundTask([]()
+					{
+						static_cast<EditorBuild*>(Subsystem::GetSubsystemByName("Build"))->RebuildAssembly();
+					});
+				}),
 #if 0
 			MenuBarEntry("Error List", []() { LogUI::Current->AddTab(new CSharpErrorList()); }, true),
 #endif

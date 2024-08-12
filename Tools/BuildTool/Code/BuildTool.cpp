@@ -121,6 +121,11 @@ int main(int argc, char** argv)
 		{
 			WriteCSharp = false;
 		}
+
+		if (ArgStr == "verbose")
+		{
+			Log::SetIsVerbose(true);
+		}
 	}
 
 	if (InLoc.empty())

@@ -15,11 +15,14 @@
 #include <Engine/EngineError.h>
 #include <Engine/AppWindow.h>
 
+static OcclusionCulling* CullSubsystem = nullptr;
+
 FramebufferObject::FramebufferObject()
 {
 	buf = new Framebuffer();
 	buf->ReInit((int)(Graphics::RenderResolution.X), (int)(Graphics::RenderResolution.Y));
 	Graphics::AllFramebuffers.push_back(this);
+	CullSubsystem = static_cast<OcclusionCulling*>(Subsystem::GetSubsystemByName("Occlude"));
 }
 
 FramebufferObject::~FramebufferObject()
@@ -85,7 +88,7 @@ void FramebufferObject::Draw()
 
 	FramebufferCamera->Update();
 
-	// If there's nothing to render, just clear it.8516
+	// If there's nothing to render, just clear it.
 	if ((!Renderables.size() && !ParticleEmitters.size()) || !Active)
 	{
 		GetBuffer()->Bind();
@@ -125,6 +128,7 @@ void FramebufferObject::Draw()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	CSM::UpdateMatricesUBO(FramebufferCamera);
 
+	// Render shadows
 	if (Graphics::RenderShadows && Graphics::ShadowResolution > 0 && !Graphics::RenderFullBright)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, CSM::LightFBO);
@@ -146,6 +150,7 @@ void FramebufferObject::Draw()
 	glViewport(0, 0, (int)BufferResolution.X, (int)BufferResolution.Y);
 	const auto LightSpaceMatrices = CSM::GetLightSpaceMatrices(FramebufferCamera);
 
+	// Find the closest lights.
 	std::vector<Graphics::Light*> DrawnLights;
 	DrawnLights.reserve(std::min(size_t(Graphics::MAX_LIGHTS), Lights.size()));
 
@@ -171,6 +176,7 @@ void FramebufferObject::Draw()
 		}
 	}
 
+	// Update uniform values for shaders.
 	for (auto& s : ShaderManager::Shaders)
 	{
 		Drawable::ApplyDefaultUniformsToShader(s.second.UsedShader, this == Graphics::MainFramebuffer);
@@ -207,31 +213,22 @@ void FramebufferObject::Draw()
 	// Bind cubemap texture
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionCubemap);
-	// Main pass
 
-	OcclusionCulling* OcclusionManager = static_cast<OcclusionCulling*>(Subsystem::GetSubsystemByName("Occlude"));
+	// Render Main pass
+	if (!CullSubsystem)
+	{
+		CullSubsystem = static_cast<OcclusionCulling*>(Subsystem::GetSubsystemByName("Occlude"));
+	}
 
-	ENGINE_ASSERT(OcclusionManager, "Occlusion manager must be loaded");
+	ENGINE_ASSERT(CullSubsystem, "Occlusion manager must be loaded");
 
 	BakedLighting::BindToTexture();
 
-	OcclusionManager->CullShader->Bind();
-	OcclusionManager->CullShader->SetMat4("u_viewpro", FramebufferCamera->getViewProj());
+	CullSubsystem->CullShader->Bind();
+	CullSubsystem->CullShader->SetMat4("u_viewpro", FramebufferCamera->getViewProj());
 	size_t i = 0;
 	GetBuffer()->Bind();
-	for (auto o : Renderables)
-	{
-		Model* m = dynamic_cast<Model*>(o);
-		if (this == Graphics::MainFramebuffer && m && !Graphics::IsWireframe)
-		{
-			OcclusionManager->RenderOccluded(m, i, this);
-		}
-		else
-		{
-			o->Render(FramebufferCamera, this == Graphics::MainFramebuffer, false);
-		}
-		i++;
-	}
+	
 	for (size_t i = 0; i < Renderables.size(); i++)
 	{
 		Model* m = dynamic_cast<Model*>(Renderables[i]);
@@ -239,10 +236,24 @@ void FramebufferObject::Draw()
 		{
 			continue;
 		}
-		OcclusionManager->UpdateOcclusionStatus(m);
+		CullSubsystem->UpdateOcclusionStatus(m);
 	}
 
-	OcclusionManager->CheckQueries(this);
+	for (auto o : Renderables)
+	{
+		Model* m = dynamic_cast<Model*>(o);
+		if (this == Graphics::MainFramebuffer && m && !Graphics::IsWireframe)
+		{
+			CullSubsystem->RenderOccluded(m, i, this);
+		}
+		else
+		{
+			o->Render(FramebufferCamera, this == Graphics::MainFramebuffer, false);
+		}
+		i++;
+	}
+
+	CullSubsystem->QueryAllOccluded(this);
 
 	GetBuffer()->Bind();
 	// Transparency pass

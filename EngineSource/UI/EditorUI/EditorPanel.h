@@ -109,6 +109,38 @@ public:
 	*/
 	void AddTab(EditorPanel* NewTab, ChildrenType Align = ChildrenType::Tabs, size_t TabPosition = SIZE_MAX);
 
+
+	/**
+	* @brief
+	* Calls the OnResized() function on all EditorPanel instances of the type T.
+	*
+	* @tparam T
+	* The type of EditorPanel that should be updated.
+	*/
+	template<typename T>
+	static void UpdateAllInstancesOf()
+	{
+		auto All = GetAllInstancesOf<T>();
+		for (T* c : All)
+		{
+			c->OnResized();
+		}
+	}
+
+	template<typename T>
+	static std::vector<T*> GetAllInstancesOf()
+	{
+		std::vector<T*> All;
+		for (UICanvas* c : Graphics::UIToRender)
+		{
+			if (dynamic_cast<T*>(c))
+			{
+				All.push_back(static_cast<T*>(c));
+			}
+		}
+		return All;
+	}
+
 	void UpdateTabs();
 	virtual ~EditorPanel();
 	virtual void OnItemDropped(DroppedItem Info);

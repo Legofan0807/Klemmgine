@@ -25,9 +25,10 @@ void Subsystem::Update()
 {
 }
 
-std::array<Vector3, 4> LogLevelColors =
+std::array<Vector3, 5> LogLevelColors =
 {
 	Log::LogColor::White,
+	Log::LogColor::Blue,
 	Log::LogColor::Yellow,
 	Log::LogColor::Red,
 	Log::LogColor::Gray,

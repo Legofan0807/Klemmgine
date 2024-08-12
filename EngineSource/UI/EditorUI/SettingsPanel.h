@@ -8,6 +8,7 @@
 #include <Engine/Application.h>
 #include <Rendering/RenderSubsystem/CSM.h>
 #include <Engine/AppWindow.h>
+#include "EditorSubsystem/EditorBuild.h"
 
 /**
 * @brief
@@ -155,23 +156,23 @@ class SettingsPanel : public EditorPanel
 			{
 				SettingsCategory::Setting("Run from editor:Launch arguments", NativeType::String, "", [](std::string NewValue)
 				{
-					EditorUI::LaunchInEditorArgs = NewValue;
+					EditorBuild::LaunchInEditorArgs = NewValue;
 				}),
 				SettingsCategory::Setting("Run from editor:Launch scene that is currently loaded in editor", NativeType::Bool, "1", [](std::string NewValue)
 				{
-					EditorUI::SetLaunchCurrentScene(NewValue == "1");
+					EditorBuild::SetLaunchCurrentScene(NewValue == "1");
 				}),
 				SettingsCategory::Setting("Run from editor:Save current scene before launch", NativeType::Bool, "0", [](std::string NewValue)
 				{
-					EditorUI::SetSaveSceneOnLaunch(NewValue == "1");
+					EditorBuild::SetSaveSceneOnLaunch(NewValue == "1");
 				}),
 				SettingsCategory::Setting("Networking:Start server on launch", NativeType::Bool, "0", [](std::string NewValue)
 				{
-					EditorUI::LaunchWithServer = std::stoi(NewValue);
+					EditorBuild::LaunchWithServer = std::stoi(NewValue);
 				}),
 				SettingsCategory::Setting("Networking:Number of clients", NativeType::Int, "1", [](std::string NewValue)
 				{
-					EditorUI::NumLaunchClients = std::stoi(NewValue);
+					EditorBuild::NumLaunchClients = std::stoi(NewValue);
 				}),
 
 #if ENGINE_CSHARP && !ENGINE_NO_SOURCE

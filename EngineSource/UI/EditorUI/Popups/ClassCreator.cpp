@@ -9,6 +9,7 @@
 #include <Engine/Subsystem/BackgroundTask.h>
 #include <Engine/Log.h>
 #include <UI/EditorUI/ClassesBrowser.h>
+#include <UI/EditorUI/EditorSubsystem/EditorBuild.h>
 
 bool replace(std::string& str, const std::string& from, const std::string& to) {
 	size_t start_pos = str.find(from);
@@ -136,7 +137,10 @@ void ClassCreator::Create(std::string Name, std::string Namespace, ClassType New
 		replace(TemplateString, "@", Namespace);
 		out << TemplateString;
 		out.close();
-		new BackgroundTask(EditorUI::RebuildAssembly);
+		new BackgroundTask([]() 
+			{
+				static_cast<EditorBuild*>(Subsystem::GetSubsystemByName("Build"))->RebuildAssembly(); 
+			});
 		break;
 	}
 #endif

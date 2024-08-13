@@ -259,7 +259,7 @@ void EditorBuild::Run()
 		}
 		else
 		{
-			new BackgroundTask([CommandLine]() { system(LaunchCommandLine.c_str()); });
+			new BackgroundTask([CommandLine]() { system(CommandLine.c_str()); });
 		}
 	}
 #endif

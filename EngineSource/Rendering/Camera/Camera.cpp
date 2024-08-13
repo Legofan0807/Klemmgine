@@ -47,7 +47,7 @@ void Camera::Update()
 	UpdateRotation();
 }
 
-glm::mat4 Camera::getViewProj()
+glm::mat4 Camera::GetViewProjection() const
 {
 	return ViewProj;
 }

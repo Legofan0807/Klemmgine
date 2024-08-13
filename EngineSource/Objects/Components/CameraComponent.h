@@ -24,6 +24,9 @@ public:
 	float GetFOV() const;
 	CameraComponent();
 
+	Vector3 WorldToScreenPos(Vector3 WorldPos) const;
+	Vector3 GetForwardFromScreenPosition(Vector2 ScreenPosition) const;
+
 	void Use();
 protected:
 	Camera ComponentCamera = Camera(2, Graphics::WindowResolution.X, Graphics::WindowResolution.Y, false);

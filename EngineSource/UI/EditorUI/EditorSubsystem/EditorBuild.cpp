@@ -1,3 +1,4 @@
+#if EDITOR
 #include "EditorBuild.h"
 #include <filesystem>
 #include <Engine/Build/Build.h>
@@ -339,3 +340,4 @@ void EditorBuild::HandleDotNetBuildLog(std::string Message)
 		List->AddMessage(msg);
 	}
 }
+#endif

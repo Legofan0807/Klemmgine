@@ -33,6 +33,23 @@ void CameraComponent::Destroy()
 #endif
 }
 
+Vector3 CameraComponent::WorldToScreenPos(Vector3 WorldPos) const
+{
+#if !SERVER
+	glm::vec4 pos = ComponentCamera.GetViewProjection() * glm::vec4(glm::vec3(WorldPos), 1.0f);
+	return Vector3(Vector2(pos.x, pos.y) / pos.z, pos.z);
+#endif
+	return 0;
+}
+
+Vector3 CameraComponent::GetForwardFromScreenPosition(Vector2 ScreenPosition) const
+{
+#if !SERVER
+	return ComponentCamera.ForwardVectorFromScreenPosition(ScreenPosition.X, ScreenPosition.Y);
+#endif
+	return Vector3();
+}
+
 
 void CameraComponent::SetFOV(float FOV)
 {

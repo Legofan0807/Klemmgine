@@ -71,7 +71,7 @@ void BillboardSprite::Render(Camera* WorldCamera, bool MainFrameBuffer, bool Tra
 	BillboardShader->SetFloat("u_scale", Size);
 	BillboardShader->SetVector4("u_color", Vector4(Color, Opacity));
 	BillboardShader->SetInt("u_texture", 0);
-	BillboardShader->SetMat4("u_viewpro", WorldCamera->getViewProj());
+	BillboardShader->SetMat4("u_viewpro", WorldCamera->GetViewProjection());
 	BillboardVertexBuffer->Draw();
 	BillboardShader->Unbind();
 }

@@ -14,7 +14,7 @@ public:
 	Camera(float FOV, float Width, float Heigth, bool Ortho = false);
 	void OnMouseMoved(float xRel, float yRel);
 	void UpdateRotation();
-	glm::mat4 getViewProj();
+	glm::mat4 GetViewProjection() const;
 
 	void SetViewProjection(glm::mat4 in)
 	{

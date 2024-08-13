@@ -101,7 +101,7 @@ void Model::Render(Camera* WorldCamera, bool MainFrameBuffer, bool TransparencyP
 			glEnable(GL_CULL_FACE);
 		}
 		glm::mat4 ModelView;
-		ModelViewProjection = WorldCamera->getViewProj() * MatModel;
+		ModelViewProjection = WorldCamera->GetViewProjection() * MatModel;
 		ModelView = WorldCamera->getView() * MatModel;
 		glm::mat4 InvModelView = glm::transpose(glm::inverse(ModelView));
 		glBindBuffer(GL_ARRAY_BUFFER, MatBuffer);
@@ -113,7 +113,7 @@ void Model::Render(Camera* WorldCamera, bool MainFrameBuffer, bool TransparencyP
 			CurrentShader->Bind();
 			glUniformMatrix4fv(glGetUniformLocation(CurrentShader->GetShaderID(), "u_projection"), 1, GL_FALSE, &WorldCamera->GetProjection()[0][0]);
 			glUniformMatrix4fv(glGetUniformLocation(CurrentShader->GetShaderID(), "u_invmodelview"), 1, GL_FALSE, &InvModelView[0][0]);
-			glUniformMatrix4fv(glGetUniformLocation(CurrentShader->GetShaderID(), "u_viewpro"), 1, GL_FALSE, &WorldCamera->getViewProj()[0][0]);
+			glUniformMatrix4fv(glGetUniformLocation(CurrentShader->GetShaderID(), "u_viewpro"), 1, GL_FALSE, &WorldCamera->GetViewProjection()[0][0]);
 			glUniformMatrix4fv(glGetUniformLocation(CurrentShader->GetShaderID(), "u_view"), 1, GL_FALSE, &WorldCamera->getView()[0][0]);
 			Meshes.at(i)->Render(CurrentShader, MainFrameBuffer);
 			Stats::DrawCalls++;

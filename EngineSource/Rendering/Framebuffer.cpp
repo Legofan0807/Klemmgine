@@ -225,7 +225,7 @@ void FramebufferObject::Draw()
 	BakedLighting::BindToTexture();
 
 	CullSubsystem->CullShader->Bind();
-	CullSubsystem->CullShader->SetMat4("u_viewpro", FramebufferCamera->getViewProj());
+	CullSubsystem->CullShader->SetMat4("u_viewpro", FramebufferCamera->GetViewProjection());
 	size_t i = 0;
 	GetBuffer()->Bind();
 	

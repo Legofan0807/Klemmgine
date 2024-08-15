@@ -80,5 +80,7 @@ void CameraComponent::Use()
 
 bool CameraComponent::IsUsed() const
 {
+#if !SERVER
 	return Graphics::MainCamera == &ComponentCamera;
+#endif
 }

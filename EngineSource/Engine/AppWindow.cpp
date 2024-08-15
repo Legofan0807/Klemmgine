@@ -74,6 +74,14 @@ void Window::SetTitleBarDark(bool NewIsDark)
 	DwmSetWindowAttribute(
 		hwnd, DWMWINDOWATTRIBUTE::DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&UseDarkMode, sizeof(UseDarkMode));
+
+	if (!GetFullScreen())
+	{
+		int x, y;
+		SDL_GetWindowSize(SDLWindow, &x, &y);
+		SDL_SetWindowSize(SDLWindow, x, y + 1);
+		SDL_SetWindowSize(SDLWindow, x, y);
+	}
 #endif
 }
 

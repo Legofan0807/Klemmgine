@@ -48,6 +48,7 @@ public:
 	static std::vector<std::string> GetBakeLog();
 	static float GetLightIntensityAt(int64_t x, int64_t y, int64_t z, float ElemaSize);
 private:
+	static void BakeAsync();
 	static void BakeLog(std::string Msg);
 	static void LoadBakeTexture(uint8_t* Texture);
 };

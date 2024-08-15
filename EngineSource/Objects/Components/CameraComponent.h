@@ -28,6 +28,7 @@ public:
 	Vector3 GetForwardFromScreenPosition(Vector2 ScreenPosition) const;
 
 	void Use();
+	bool IsUsed() const;
 protected:
 	Camera ComponentCamera = Camera(2, Graphics::WindowResolution.X, Graphics::WindowResolution.Y, false);
 };

@@ -379,7 +379,16 @@ void EditorUI::OnLeave()
 void EditorUI::Update()
 {
 	EditorPanel::TickPanels();
-	Window::SetWindowTitle(StrUtil::Format("%s.jscn - %s", Scene::CurrentScene.c_str(), Project::ProjectName));
+
+	if (Scene::CurrentScene.empty())
+	{
+		Window::SetWindowTitle(StrUtil::Format("No scene - %s", Scene::CurrentScene.c_str(), Project::ProjectName));
+	}
+	else
+	{
+		Window::SetWindowTitle(StrUtil::Format("%s.jscn - %s", Scene::CurrentScene.c_str(), Project::ProjectName));
+	}
+
 	if (BakedLighting::FinishedBaking)
 	{
 		BakedLighting::FinishedBaking = false;

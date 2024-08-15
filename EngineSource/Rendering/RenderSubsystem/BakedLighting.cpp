@@ -2,7 +2,6 @@
 #include "BakedLighting.h"
 #include <GL/glew.h>
 #include <Math/Vector.h>
-#include <Engine/EngineRandom.h>
 #include <Engine/EngineError.h>
 #include <iostream>
 #include <Math/Collision/Collision.h>
@@ -10,13 +9,15 @@
 #include <Objects/Components/MeshComponent.h>
 #include <Rendering/Mesh/ModelGenerator.h>
 #include <thread>
-#include <Engine/Log.h>
 #include <Engine/File/Assets.h>
 #include <filesystem>
 #include <Engine/Subsystem/Scene.h>
-#include <fstream>
 #include <Engine/Application.h>
 #include <Rendering/Framebuffer.h>
+#include <mutex>
+#include <deque>
+#include <Engine/Subsystem/BackgroundTask.h>
+#include <Engine/Log.h>
 
 unsigned int BakedLighting::LightTexture = 0;
 float BakedLighting::LightmapScaleMultiplier = 1;
@@ -66,12 +67,12 @@ namespace Bake
 
 	std::byte* Texture = nullptr;
 
-	constexpr int NUM_CHUNK_SPLITS = 2;
-	std::atomic<float> ThreadProgress[NUM_CHUNK_SPLITS * NUM_CHUNK_SPLITS * NUM_CHUNK_SPLITS];
+	int ChunkSplits = 3;
+	std::deque<std::atomic<float>> ThreadProgress;
 
 	static void BakeSection(int64_t x, int64_t y, int64_t z, size_t ThreadID)
 	{
-		const uint64_t SECTION_SIZE = BakedLighting::LightmapResolution / NUM_CHUNK_SPLITS;
+		const uint64_t SECTION_SIZE = BakedLighting::LightmapResolution / ChunkSplits;
 		const float ProgressPerPixel = 1.0f / (SECTION_SIZE * SECTION_SIZE * SECTION_SIZE);
 
 		const float TexelSize = BakeScale.X / BakedLighting::LightmapResolution;
@@ -90,13 +91,65 @@ namespace Bake
 				continue;
 			}
 
-
 			Vector3 Pos = BakeMapToPos(i);
 			Pos = Pos / (float)BakedLighting::LightmapResolution;
 			Pos = Pos * BakeScale;
 			float Intensity = BakedLighting::GetLightIntensityAt((int64_t)Pos.X, (int64_t)Pos.Y, (int64_t)Pos.Z, TexelSize);
 			Texture[i] = std::byte(Intensity * 255);
 			ThreadProgress[ThreadID] += ProgressPerPixel;
+		}
+	}
+
+	static bool BakeIteration()
+	{
+		bool Found = false;
+		uint64_t FoundX = 0, FoundY = 0, FoundZ = 0;
+		size_t FoundThreadID = 0;
+		{
+			static std::mutex ChunkFindMutex;
+			std::lock_guard Guard{ ChunkFindMutex };
+			size_t ThreadID = 0;
+
+			for (size_t x = 0; x < ChunkSplits; x++)
+			{
+				for (size_t y = 0; y < ChunkSplits; y++)
+				{
+					for (size_t z = 0; z < ChunkSplits; z++)
+					{
+						if (ThreadProgress[ThreadID++] != 0)
+						{
+							continue;
+						}
+						ThreadProgress[ThreadID - 1] = 0.0001f;
+						FoundX = x;
+						FoundY = y;
+						FoundZ = z;
+						FoundThreadID = ThreadID - 1;
+						Found = true;
+						break;
+					}
+					if (Found)
+						break;
+				}
+				if (Found)
+					break;
+			}
+		}
+
+		if (!Found)
+		{
+			return false;
+		}
+
+		BakeSection(FoundX, FoundY, FoundZ, FoundThreadID);
+		return true;
+	}
+
+	static void BakeThread()
+	{
+		while (BakeIteration())
+		{
+			continue;
 		}
 	}
 }
@@ -231,6 +284,23 @@ static std::byte Sample3DArray(std::byte* Arr, int64_t x, int64_t y, int64_t z)
 	return Bake::Texture[x * BakedLighting::LightmapResolution * BakedLighting::LightmapResolution + y * BakedLighting::LightmapResolution + z];
 }
 
+static int GetChunkSplits()
+{
+	if (BakedLighting::LightmapResolution <= 64)
+	{
+		return 2;
+	}
+	if (BakedLighting::LightmapResolution <= 128)
+	{
+		return 3;
+	}
+	if (BakedLighting::LightmapResolution <= 256)
+	{
+		return 4;
+	}
+	return 5;
+}
+
 void BakedLighting::BakeCurrentSceneToFile()
 {
 	const int Number = 25;
@@ -275,183 +345,7 @@ void BakedLighting::BakeCurrentSceneToFile()
 	}
 	Bake::Lights = Graphics::MainFramebuffer->Lights;
 
-	new std::thread([]() {
-
-		Application::Timer BakeTimer;
-		BakeLogMessages.clear();
-		BakeLog("Baking lightmap for scene " + FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + "...");
-		for (auto& i : Bake::ThreadProgress)
-		{
-			i = 0;
-		}
-		Bake::Texture = new std::byte[LightmapResolution * LightmapResolution * LightmapResolution * NUM_CHANNELS]();
-
-		std::vector<std::thread*> BakeThreads;
-
-		Collision::Box sbox;
-
-		for (auto& i : Bake::Meshes)
-		{
-			if (!i.MeshData.CastStaticShadow)
-			{
-				continue;
-			}
-			auto verts = i.MeshData.GetMergedVertices();
-			for (auto& vert : verts)
-			{
-				if (vert.Position.x > sbox.maxX)
-				{
-					sbox.maxX = vert.Position.x;
-				}
-				if (vert.Position.y > sbox.maxY)
-				{
-					sbox.maxY = vert.Position.y;
-				}
-				if (vert.Position.z > sbox.maxZ)
-				{
-					sbox.maxZ = vert.Position.z;
-				}
-				if (vert.Position.x < sbox.minX)
-				{
-					sbox.minX = vert.Position.x;
-				}
-				if (vert.Position.y < sbox.minY)
-				{
-					sbox.minY = vert.Position.y;
-				}
-				if (vert.Position.z < sbox.minZ)
-				{
-					sbox.minZ = vert.Position.z;
-				}
-			}
-		}
-
-		Bake::BakeScale = (sbox.GetExtent() * 2) + sbox.GetCenter();
-		Bake::BakeScale = std::max(Bake::BakeScale.X, std::max(Bake::BakeScale.Y, Bake::BakeScale.Z));
-		BakeLog("Calculated scene bounding box: " + std::to_string(Bake::BakeScale.X));
-		Bake::BakeScale = Bake::BakeScale * LightmapScaleMultiplier;
-		BakeLog("Baking with scale: " + std::to_string(Bake::BakeScale.X));
-		Bake::SunDirection = (glm::vec3)Vector3::GetForwardVector(Graphics::WorldSun.Rotation);
-		size_t Thread3DArraySize = Bake::NUM_CHUNK_SPLITS;
-
-		size_t ThreadID = 0;
-		for (size_t x = 0; x < Thread3DArraySize; x++)
-		{
-			for (size_t y = 0; y < Thread3DArraySize; y++)
-			{
-				for (size_t z = 0; z < Thread3DArraySize; z++)
-				{
-					BakeThreads.push_back(new std::thread(Bake::BakeSection, x, y, z, ThreadID++));
-				}
-			}
-		}
-
-		BakeLog("Invoked " + std::to_string(BakeThreads.size()) + " threads");
-
-		for (int i = (int)BakeThreads.size() - 1; i >= 0; i--)
-		{
-			BakeThreads[i]->join();
-			BakeLog("Thread " + std::to_string(BakeThreads.size() - i) + "/" + std::to_string(BakeThreads.size()) + " is done.");
-		}
-
-		BakeLog("Finished baking lightmap.");
-		BakeLog("Bake took " + std::to_string((int)BakeTimer.Get()) + " seconds.");
-
-		for (int64_t x = 0; x < (int64_t)BakedLighting::LightmapResolution; x++)
-		{
-			for (int64_t y = 0; y < (int64_t)BakedLighting::LightmapResolution; y++)
-			{
-				for (int64_t z = 0; z < (int64_t)BakedLighting::LightmapResolution; z++)
-				{
-					uint16_t val = 0;
-					for (int64_t bx = -1; bx <= 1; bx++)
-					{
-						for (int64_t bz = -1; bz <= 1; bz++)
-						{
-							val += (uint16_t)Sample3DArray(Bake::Texture, x + bx, y, z + bz);
-						}
-					}
-					Bake::Texture[x * BakedLighting::LightmapResolution * BakedLighting::LightmapResolution
-						+ y * BakedLighting::LightmapResolution
-						+ z] = (std::byte)(val / 9);
-				}
-			}
-		}
-		
-		// Simple RLE for lightmap compression.
-		std::byte* TexPtr = Bake::Texture;
-
-		std::string BakFile = Assets::GetAsset(FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + ".bkdat");
-		if (!std::filesystem::exists(BakFile))
-		{
-			BakFile = FileUtil::GetFilePathWithoutExtension(Scene::CurrentScene) + ".bkdat";
-		}
-
-
-		std::ofstream OutFile = std::ofstream(BakFile, std::ios::out | std::ios::binary);
-
-
-		uint8_t FileVersion = BKDAT_FILE_VERSION;
-		OutFile.write((char*)&FileVersion, sizeof(FileVersion));
-		struct RLEelem
-		{
-			std::byte Value = std::byte(1);
-			uint8_t Length = 0;
-		};
-
-		RLEelem Current;
-		std::vector<RLEelem> Elements;
-
-		BakeLog("Compressing lightmap...");
-		for (size_t i = 0; i < LightmapResolution * LightmapResolution * LightmapResolution * NUM_CHANNELS; i++)
-		{
-			std::byte CurrentVal = Bake::Texture[i];
-
-			// If the new value is different than the other one, start a new RLE element.
-			if (Current.Value != CurrentVal)
-			{
-				if (Current.Length != 0)
-				{
-					Elements.push_back(Current);
-				}
-				Current.Value = CurrentVal;
-				Current.Length = 0;
-			}
-
-			Current.Length++;
-
-			// Don't write an RLE element with a size longer than the maximum size.
-			if (Current.Length == UINT8_MAX)
-			{
-				Elements.push_back(Current);
-				Current.Length = 0;
-			}
-		}
-
-		size_t ElemsSize = Elements.size();
-		OutFile.write((char*)&ElemsSize, sizeof(ElemsSize));
-		OutFile.write((char*)&LightmapResolution, sizeof(LightmapResolution));
-		OutFile.write((char*)&Bake::BakeScale, sizeof(Bake::BakeScale));
-
-		size_t TotalLength = 0;
-
-		BakeLog("Compressed lightmap with " + std::to_string(ElemsSize) + " RLE elements.");
-		for (auto& i : Elements)
-		{
-			TotalLength += i.Length;
-			OutFile.write((char*)&i.Length, sizeof(i.Length));
-			OutFile.write((char*)&i.Value, sizeof(i.Value));
-		}
-
-		BakeLog("Encoded voxels: " + std::to_string(TotalLength));
-
-		BakeSystem->Print("Finished baking lightmap for " + Scene::CurrentScene);
-		BakeSystem->Print(" -> " + BakFile);
-
-		delete[] Bake::Texture;
-		Bake::Meshes.clear();
-		BakedLighting::FinishedBaking = true;
-		});
+	new BackgroundTask(BakeAsync);
 }
 
 float BakedLighting::GetBakeProgress()
@@ -461,7 +355,189 @@ float BakedLighting::GetBakeProgress()
 	{
 		Progress += i;
 	}
-	return Progress / (Bake::NUM_CHUNK_SPLITS * Bake::NUM_CHUNK_SPLITS * Bake::NUM_CHUNK_SPLITS);
+	return Progress / (Bake::ChunkSplits * Bake::ChunkSplits * Bake::ChunkSplits);
+}
+
+void BakedLighting::BakeAsync()
+{
+	using namespace Bake;
+
+	Application::Timer BakeTimer;
+	BakeLogMessages.clear();
+	BakeLog("Baking lightmap for scene " + FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + "...");
+	for (auto& i : Bake::ThreadProgress)
+	{
+		i = 0;
+	}
+	Bake::Texture = new std::byte[LightmapResolution * LightmapResolution * LightmapResolution * NUM_CHANNELS]();
+
+	std::vector<std::thread*> BakeThreads;
+
+	Collision::Box sbox;
+
+	for (auto& i : Bake::Meshes)
+	{
+		if (!i.MeshData.CastStaticShadow)
+		{
+			continue;
+		}
+		auto verts = i.MeshData.GetMergedVertices();
+		for (auto& vert : verts)
+		{
+			if (vert.Position.x > sbox.maxX)
+			{
+				sbox.maxX = vert.Position.x;
+			}
+			if (vert.Position.y > sbox.maxY)
+			{
+				sbox.maxY = vert.Position.y;
+			}
+			if (vert.Position.z > sbox.maxZ)
+			{
+				sbox.maxZ = vert.Position.z;
+			}
+			if (vert.Position.x < sbox.minX)
+			{
+				sbox.minX = vert.Position.x;
+			}
+			if (vert.Position.y < sbox.minY)
+			{
+				sbox.minY = vert.Position.y;
+			}
+			if (vert.Position.z < sbox.minZ)
+			{
+				sbox.minZ = vert.Position.z;
+			}
+		}
+	}
+
+	BakeScale = (sbox.GetExtent() * 2) + sbox.GetCenter();
+	BakeScale = std::max(BakeScale.X, std::max(BakeScale.Y, BakeScale.Z));
+	BakeLog("Calculated scene bounding box: " + std::to_string(BakeScale.X));
+	BakeScale = BakeScale * LightmapScaleMultiplier;
+	BakeLog("Baking with scale: " + std::to_string(BakeScale.X));
+	SunDirection = (glm::vec3)Vector3::GetForwardVector(Graphics::WorldSun.Rotation);
+
+	ChunkSplits = GetChunkSplits();
+
+	int NumChunks = ChunkSplits * ChunkSplits * ChunkSplits;
+	for (int i = 0; i < NumChunks; i++)
+	{
+		ThreadProgress.emplace_back(0.0f);
+	}
+
+	size_t ThreadID = 0;
+	size_t NumThreads = std::min(size_t(std::thread::hardware_concurrency()), size_t(NumChunks));
+	for (size_t i = 0; i < NumThreads; i++)
+	{
+		BakeThreads.push_back(new std::thread(BakeThread));
+	}
+
+	BakeLog("Invoked " + std::to_string(BakeThreads.size()) + " threads for " + std::to_string(NumChunks) + " chunks.");
+
+	for (int i = (int)BakeThreads.size() - 1; i >= 0; i--)
+	{
+		BakeThreads[i]->join();
+		BakeLog("Thread " + std::to_string(BakeThreads.size() - i) + "/" + std::to_string(BakeThreads.size()) + " is done.");
+	}
+
+	BakeLog("Finished baking lightmap.");
+	BakeLog("Bake took " + std::to_string((int)BakeTimer.Get()) + " seconds.");
+
+	for (int64_t x = 0; x < (int64_t)BakedLighting::LightmapResolution; x++)
+	{
+		for (int64_t y = 0; y < (int64_t)BakedLighting::LightmapResolution; y++)
+		{
+			for (int64_t z = 0; z < (int64_t)BakedLighting::LightmapResolution; z++)
+			{
+				uint16_t val = 0;
+				for (int64_t bx = -1; bx <= 1; bx++)
+				{
+					for (int64_t bz = -1; bz <= 1; bz++)
+					{
+						val += (uint16_t)Sample3DArray(Bake::Texture, x + bx, y, z + bz);
+					}
+				}
+				Bake::Texture[x * BakedLighting::LightmapResolution * BakedLighting::LightmapResolution
+					+ y * BakedLighting::LightmapResolution
+					+ z] = (std::byte)(val / 9);
+			}
+		}
+	}
+
+	// Simple RLE for lightmap compression.
+	std::byte* TexPtr = Bake::Texture;
+
+	std::string BakFile = Assets::GetAsset(FileUtil::GetFileNameWithoutExtensionFromPath(Scene::CurrentScene) + ".bkdat");
+	if (!std::filesystem::exists(BakFile))
+	{
+		BakFile = FileUtil::GetFilePathWithoutExtension(Scene::CurrentScene) + ".bkdat";
+	}
+
+
+	std::ofstream OutFile = std::ofstream(BakFile, std::ios::out | std::ios::binary);
+
+
+	uint8_t FileVersion = BKDAT_FILE_VERSION;
+	OutFile.write((char*)&FileVersion, sizeof(FileVersion));
+	struct RLEelem
+	{
+		std::byte Value = std::byte(1);
+		uint8_t Length = 0;
+	};
+
+	RLEelem Current;
+	std::vector<RLEelem> Elements;
+
+	BakeLog("Compressing lightmap...");
+	for (size_t i = 0; i < LightmapResolution * LightmapResolution * LightmapResolution * NUM_CHANNELS; i++)
+	{
+		std::byte CurrentVal = Bake::Texture[i];
+
+		// If the new value is different than the other one, start a new RLE element.
+		if (Current.Value != CurrentVal)
+		{
+			if (Current.Length != 0)
+			{
+				Elements.push_back(Current);
+			}
+			Current.Value = CurrentVal;
+			Current.Length = 0;
+		}
+
+		Current.Length++;
+
+		// Don't write an RLE element with a size longer than the maximum size.
+		if (Current.Length == UINT8_MAX)
+		{
+			Elements.push_back(Current);
+			Current.Length = 0;
+		}
+	}
+
+	size_t ElemsSize = Elements.size();
+	OutFile.write((char*)&ElemsSize, sizeof(ElemsSize));
+	OutFile.write((char*)&LightmapResolution, sizeof(LightmapResolution));
+	OutFile.write((char*)&BakeScale, sizeof(BakeScale));
+
+	size_t TotalLength = 0;
+
+	BakeLog("Compressed lightmap with " + std::to_string(ElemsSize) + " RLE elements.");
+	for (auto& i : Elements)
+	{
+		TotalLength += i.Length;
+		OutFile.write((char*)&i.Length, sizeof(i.Length));
+		OutFile.write((char*)&i.Value, sizeof(i.Value));
+	}
+
+	BakeLog("Encoded voxels: " + std::to_string(TotalLength));
+
+	BakeSystem->Print("Finished baking lightmap for " + Scene::CurrentScene);
+	BakeSystem->Print(" -> " + BakFile);
+
+	delete[] Bake::Texture;
+	Meshes.clear();
+	BakedLighting::FinishedBaking = true;
 }
 
 #endif

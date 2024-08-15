@@ -77,3 +77,8 @@ void CameraComponent::Use()
 	}
 #endif
 }
+
+bool CameraComponent::IsUsed() const
+{
+	return Graphics::MainCamera == &ComponentCamera;
+}

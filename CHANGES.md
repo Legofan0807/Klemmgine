@@ -1,5 +1,17 @@
 # Changes
 
+## Version 1.14.1
+
+### Changes
+
+- Improved thread creation for baking lighting.
+- Added CameraComponent::IsUsed(), CameraComponent::GetForwardFromScreenPosition(), CameraComponent::WorldToScreenPos()
+
+### Fixes
+
+- Fixed an issue where Windows 10 immersive dark mode wouldn't apply when the application launches.
+- Fixed an issue where having an empty scene open would display it as ".jscn" in the app title bar.
+
 ## Version 1.14.0
 
 ### Changes

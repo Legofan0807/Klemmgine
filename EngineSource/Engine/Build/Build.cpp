@@ -66,13 +66,14 @@ std::string Build::TryBuildProject(std::string TargetFolder)
 			{
 				std::filesystem::copy(BinaryPath + "/SDL2.dll", TargetFolder + "SDL2.dll");
 				std::filesystem::copy(BinaryPath + "/SDL2_net.dll", TargetFolder + "SDL2_net.dll");
+				std::filesystem::copy(BinaryPath + "/OpenAL32.dll", TargetFolder + "/OpenAL32.dll");
 			}
 			else
 			{
 				std::filesystem::copy("SDL2.dll", TargetFolder + "SDL2.dll");
 				std::filesystem::copy("SDL2_net.dll", TargetFolder + "SDL2_net.dll");
+				std::filesystem::copy("OpenAL32.dll", TargetFolder + "/OpenAL32.dll");
 			}
-			std::filesystem::copy(BinaryPath + "/OpenAL32.dll", TargetFolder + "/OpenAL32.dll");
 #ifdef ENGINE_CSHARP
 			std::filesystem::copy("nethost.dll", TargetFolder + "nethost.dll");
 #endif

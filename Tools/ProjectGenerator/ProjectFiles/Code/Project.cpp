@@ -2,8 +2,6 @@
 
 namespace Project
 {
-	bool UseNetworkFunctions = false;
-
 	// This is the name of the current project
 	const char* ProjectName = "Untitled";
 

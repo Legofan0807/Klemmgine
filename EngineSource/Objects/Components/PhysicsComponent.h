@@ -123,5 +123,5 @@ public:
 	void* PhysicsBodyPtr = nullptr;
 
 private:
-	bool Active = false;
+	bool Active = true;
 };

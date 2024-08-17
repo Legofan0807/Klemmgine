@@ -21,6 +21,11 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 
 	if (Depth >= MoveMaxDepth)
 	{
+		if (!GravityPass)
+		{
+			LastMoveSuccessful = false;
+			LastHitNormal = Direction.Normalize();
+		}
 		return 0;
 	}
 
@@ -34,7 +39,6 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 		{
 			GroundNormal = Vector3(0, 1, 0);
 		}
-		LastMoveSuccessful = true;
 		return Direction;
 	}
 
@@ -66,10 +70,11 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 
 	float Angle = Vector3::Dot(HitNormal, Vector3(0, 1, 0));
 
+	float StepSize = ColliderSize.Y * 0.9f;
 	if (!GravityPass)
 	{
 		Vector3 NewDir = (-HitNormal * Vector3(1, 0, 1)).Normalize() * 1;
-		Vector3 TestPos = Pos + Vector3(0, 0.9f, 0);
+		Vector3 TestPos = Pos + Vector3(0, StepSize, 0);
 
 		auto Hits = CollisionBody->ShapeCast(
 			Transform(TestPos, 0, Vector3(ColliderSize.X, ColliderSize.Y, ColliderSize.X)),
@@ -78,7 +83,7 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 			{ GetParent() }
 		);
 
-		HitStep = AvgPos.Y - Pos.Y < -0.9f && !Hits.size();
+		HitStep = AvgPos.Y - Pos.Y < -StepSize && !Hits.size();
 		if (HitStep)
 		{
 			HitNormal = Vector3(0, 1, 0);
@@ -98,6 +103,7 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 		{
 			GroundedTimer = 5;
 			GroundNormal = HitNormal;
+			StoodOn = Hits[0].HitComponent;
 			return SnapToSurface;
 		}
 	}
@@ -114,13 +120,15 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 			Vector3(-InitialDirection.X, 0, -InitialDirection.Z).Normalize()
 		);
 		LeftOver = LeftOver * Scale;
+
+		LastMoveSuccessful = false;
+		LastHitNormal = HitNormal;
 	}
 
 	if (!GravityPass)
 	{
-		SnapToSurface += HitNormal * Stats::DeltaTime * (HitStep ? 5.0f : 1.0f);
+		SnapToSurface += HitNormal * Stats::DeltaTime * (HitStep ? 5.0f : 1.0f) * StepSize;
 	}
-
 
 	return SnapToSurface + TryMove(LeftOver, InitialDirection, Pos + SnapToSurface, GravityPass, Depth + 1);
 }
@@ -133,6 +141,13 @@ bool MoveComponent::GetIsOnGround() const
 Vector3 MoveComponent::GetVelocity() const
 {
 	return Vector3(MovementVelocity.X, VerticalVelocity + (Jumping ? JumpHeight : 0), MovementVelocity.Y);
+}
+
+void MoveComponent::SetVelocity(Vector3 NewVelocity)
+{
+	MovementVelocity.X = NewVelocity.X;
+	MovementVelocity.Y = NewVelocity.Z;
+	VerticalVelocity = NewVelocity.Y - (Jumping ? JumpHeight : 0);
 }
 
 void MoveComponent::Begin()
@@ -188,11 +203,12 @@ void MoveComponent::Update()
 	}
 
 	Vector3 MoveDir = Vector3(MovementVelocity.X, 0, MovementVelocity.Y).ProjectToPlane(0, GroundNormal) * Stats::DeltaTime;
-	GetParent()->GetTransform().Position += TryMove(MoveDir, MoveDir, WorldTransform.Position, false);
+	LastMoveSuccessful = true;
+	Vector3 Moved = TryMove(MoveDir, MoveDir, WorldTransform.Position, false);
+	GetParent()->GetTransform().Position += Moved;
 
-	LastMoveSuccessful = MoveDir.Length() / Stats::DeltaTime > 0.1f;
 
-	MoveDir = Vector3(0, (std::min(VerticalVelocity, -5.0f) + (Jumping ? JumpHeight : 0)) * Stats::DeltaTime, 0);
+	MoveDir = Vector3(0, (VerticalVelocity - 5.0f + (Jumping ? JumpHeight : 0)) * Stats::DeltaTime, 0);
 	Vector3 GravityMovement = TryMove(MoveDir, MoveDir, WorldTransform.Position, true);
 
 	GetParent()->GetTransform().Position += GravityMovement;

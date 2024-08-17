@@ -37,7 +37,7 @@ namespace Physics
 	* @brief
 	* Physics layer enum. Defines collision rules for physics objects.
 	* 
-	* Layers can be or'd together. Example:
+	* Each layer is one bit, so they can be combined. Example:
 	* ```cpp
 	* Body.CollisionLayers = Dynamic | Layer0;
 	* ```
@@ -77,7 +77,7 @@ namespace Physics
 		Static = 0,
 		/// PhysicsBody is only movable using velocities only, does not respond to forces.
 		Kinematic = 1,
-		/// Physicsbody is fully movable.
+		/// PhysicsBody is fully movable.
 		Dynamic = 2,
 	};
 
@@ -101,7 +101,7 @@ namespace Physics
 		bool Hit = false;
 		/// The penetration depth of the collision.
 		float Depth = 0.0f;
-		/// For ray/shape casts only. The distance at which soemthing has been hit. From 0 (start of the ray) to 1 (end of the ray)
+		/// For ray/shape casts only. The distance at which something has been hit. From 0 (start of the ray) to 1 (end of the ray)
 		float Distance = INFINITY;
 		/// The component that has been hit. For the hit object, call `HitComponent->GetParent()`.
 		Component* HitComponent = nullptr;
@@ -139,7 +139,9 @@ namespace Physics
 		*/
 		MotionType ColliderMovability = MotionType::Static;
 
+		/// The layers of the body.
 		Layer CollisionLayers = Layer::None;
+		/// The component the body belongs to.
 		Component* Parent = nullptr;
 		PhysicsBody(BodyType NativeType, Transform BodyTransform, MotionType ColliderMovability, Layer CollisionLayers, Component* Parent);
 
@@ -199,8 +201,6 @@ namespace Physics
 	/**
 	* @brief
 	* A PhysicsBody representing a sphere.
-	* 
-	* Instead of using SetTransform, use SetSphereTransform.
 	* 
 	* @ingroup Physics
 	*/
@@ -318,5 +318,25 @@ namespace Physics
 	void AddBody(PhysicsBody* Body);
 	void RemoveBody(PhysicsBody* Body, bool Destroy);
 
+	/**
+	* @brief
+	* Casts a ray from the given start point to the end point.
+	* 
+	* @param Start
+	* Where the ray should start
+	* 
+	* @param End
+	* Where the ray should end.
+	* 
+	* @param Layers
+	* The layers on which collision should be tested.
+	* 
+	* @param ObjectsToIgnore
+	* A list of objects that should be ignored in the collision test.
+	* 
+	* @return
+	* A HitResult with HitResult.Hit = false if nothing was between the start and end points,
+	* or a HitResult with HitResult.Hit = true and information about the first intersection of the ray if something is between the start and end points.
+	*/
 	HitResult RayCast(Vector3 Start, Vector3 End, Layer Layers, std::set<SceneObject*> ObjectsToIgnore = {});
 }

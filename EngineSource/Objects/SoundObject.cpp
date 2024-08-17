@@ -11,8 +11,8 @@ void SoundObject::Begin()
 	AddEditorProperty(Property("Sound:Volume", NativeType::Float, &Volume));
 	AddEditorProperty(Property("Sound:Looping", NativeType::Bool, &IsLooping));
 
-	AddEditorProperty(Property("3D-Sound:In 3D-Space", NativeType::Bool, &IsSpatialSound));
-	AddEditorProperty(Property("3D-Sound:Falloff Range", NativeType::Float, &FalloffRange));
+	AddEditorProperty(Property("3D Sound:In 3D Space", NativeType::Bool, &IsSpatialSound));
+	AddEditorProperty(Property("3D Sound:Falloff Range", NativeType::Float, &FalloffRange));
 
 #if EDITOR
 	auto EditorBillboard = new BillboardComponent();

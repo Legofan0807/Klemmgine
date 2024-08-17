@@ -60,7 +60,11 @@ void PhysicsComponent::CreateBox(Transform RelativeTransform, Physics::MotionTyp
 
 	
 	PhysicsBodyPtr = Body;
-	SetActive(true);
+	if (GetActive())
+	{
+		Active = false;
+		SetActive(true);
+	}
 }
 
 void PhysicsComponent::CreateSphere(Transform RelativeTransform, Physics::MotionType BoxMovability, Physics::Layer CollisionLayers)
@@ -83,7 +87,11 @@ void PhysicsComponent::CreateSphere(Transform RelativeTransform, Physics::Motion
 
 
 	PhysicsBodyPtr = Body;
-	SetActive(true);
+	if (GetActive())
+	{
+		Active = false;
+		SetActive(true);
+	}
 }
 
 void PhysicsComponent::CreateCapsule(Transform RelativeTransform, Physics::MotionType CapsuleMovability, Physics::Layer CollisionLayers)
@@ -106,7 +114,11 @@ void PhysicsComponent::CreateCapsule(Transform RelativeTransform, Physics::Motio
 
 
 	PhysicsBodyPtr = Body;
-	SetActive(true);
+	if (GetActive())
+	{
+		Active = false;
+		SetActive(true);
+	}
 }
 
 Transform PhysicsComponent::GetBodyWorldTransform() const

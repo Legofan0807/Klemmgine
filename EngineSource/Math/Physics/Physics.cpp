@@ -134,7 +134,7 @@ Physics::HitResult Physics::HitResult::GetAverageHit(std::vector<HitResult> Hits
 	}
 
 	Vector3 HitNormal = Vector3(0, 0, 0);
-	float MaxDistance = 0;
+	float MinDistance = INFINITY;
 
 	float AvgDepth = 0, AvgDist = 0;
 
@@ -143,10 +143,9 @@ Physics::HitResult Physics::HitResult::GetAverageHit(std::vector<HitResult> Hits
 	for (auto& i : Hits)
 	{
 		HitNormal += i.Normal * i.Depth;
-		MaxDistance = std::max(i.Distance, MaxDistance);
+		MinDistance = std::min(i.Distance, MinDistance);
 		AvgPos += i.ImpactPoint;
 		AvgDepth += i.Depth;
-		AvgDist += i.Distance;
 	}
 	HitNormal = HitNormal.Normalize();
 	AvgPos = AvgPos / Vector3((float)Hits.size());
@@ -163,9 +162,10 @@ Physics::HitResult Physics::HitResult::GetAverageHit(std::vector<HitResult> Hits
 
 	Physics::HitResult h;
 	h.Normal = HitNormal;
-	h.Distance = AvgDist / (float)Hits.size();
+	h.Distance = MinDistance;
 	h.Depth = AvgDepth / (float)Hits.size();
 	h.HitComponent = Hits[0].HitComponent;
+	h.ImpactPoint = AvgPos;
 	h.Hit = true;
 	return h;
 }

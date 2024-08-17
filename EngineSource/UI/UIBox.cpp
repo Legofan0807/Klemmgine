@@ -9,6 +9,7 @@
 #include <UI/UICanvas.h>
 #include <algorithm>
 #include <Engine/Stats.h>
+#include <set>
 #if EDITOR
 #include <UI/EditorUI/EditorUI.h>
 #endif

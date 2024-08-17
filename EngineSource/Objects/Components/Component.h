@@ -39,6 +39,10 @@ public:
 	*/
 	Transform RelativeTransform;
 
+	/**
+	* @brief
+	* Gets the transform of the component relative to the world.
+	*/
 	virtual Transform GetWorldTransform();
 
 private:

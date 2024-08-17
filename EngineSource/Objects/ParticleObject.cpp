@@ -5,7 +5,7 @@
 
 void ParticleObject::Begin()
 {
-	AddEditorProperty(Property("Emitter", NativeType::String, &ParticleName));
+	AddEditorProperty(Property("Particle File", NativeType::String, &ParticleName));
 	if (Particle) Detach(Particle);
 	Particle = new ParticleComponent();
 	Attach(Particle);

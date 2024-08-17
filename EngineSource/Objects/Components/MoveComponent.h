@@ -36,6 +36,7 @@ public:
 
 	/// Gets the velocity the movement is at.
 	Vector3 GetVelocity() const;
+	void SetVelocity(Vector3 NewVelocity);
 	void Begin() override;
 	void Update() override;
 	void Destroy() override;
@@ -63,4 +64,7 @@ public:
 	/// True if the movement is active.
 	bool Active = true;
 	bool LastMoveSuccessful = false;
+
+	Vector3 LastHitNormal;
+	Component* StoodOn = nullptr;
 };

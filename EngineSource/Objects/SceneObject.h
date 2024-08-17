@@ -223,9 +223,18 @@ public:
 	SceneObject(ObjectDescription Descr = ObjectDescription("Empty Object", 0));
 	virtual ~SceneObject();
 	SceneObject* Start(std::string ObjectName, Transform Transform, uint64_t NetID);
+	/// Virtual function called when the object is destroyed.
 	virtual void Destroy();
+	/// Virtual function called each frame the object exists.
 	virtual void Update();
+	/// Virtual function called when the object is created.
 	virtual void Begin();
+	/**
+	* @brief
+	* Virtual function. If this returns true, the object is replicated between server and clients.
+	* 
+	* This function should always return the same value for an object, or unexpected behavior might occur.
+	*/
 	virtual bool GetIsReplicated();
 
 	/// Sets the transform of the object.

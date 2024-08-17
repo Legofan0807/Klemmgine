@@ -1,7 +1,6 @@
 #if !SERVER
 #pragma once
 #include <Math/Vector.h>
-#include <set>
 #include <cmath>
 #include <UI/Default/ScrollObject.h>
 
@@ -28,6 +27,7 @@ class UIButton;
 class UIBox
 {
 public:
+	/// True if this box should be rendered, false if not.
 	bool IsVisible = true;
 
 	/**
@@ -124,6 +124,10 @@ public:
 	virtual std::string GetAsString();
 	void DebugPrintTree(uint8_t Depth = 0);
 
+	/**
+	* @brief
+	* Sets the size mode of the minimum and maximum size value of this UIBox.
+	*/
 	UIBox* SetSizeMode(SizeMode NewMode);
 	BorderType BoxBorder = BorderType::None;
 	SizeMode PaddingSizeMode = SizeMode::ScreenRelative;
@@ -194,8 +198,19 @@ public:
 	 */
 	UIBox* SetVerticalAlign(Align NewAlign);
 	static void DrawAllUIElements();
+	
+	/**
+	* @brief
+	* Clears and deletes all children from this UIBox.
+	*/
 	void DeleteChildren();
 
+	/**
+	* @brief
+	* Returns true if the element is visible.
+	* 
+	* Even if this box is visible, one of it's parents might not be. This function accurately returns if the UIBox will be drawn.
+	*/
 	bool IsVisibleInHierarchy();
 	
 	/**
@@ -222,6 +237,8 @@ public:
 	 * A reference to this %UIBox.
 	 */
 	UIBox* SetMinSize(Vector2 NewMinSize);
+
+	/// Gets the minimum size this UIBox can occupy
 	Vector2 GetMinSize() const;
 
 	/**
@@ -263,9 +280,25 @@ public:
 	 * A pointer to this UIBox.
 	 */
 	UIBox* SetPadding(float AllDirs);
+
+	/**
+	* @brief
+	* If true, this box will try to fill up the entire space aligned opposite of the parent's orientation.
+	*/
 	UIBox* SetTryFill(bool NewTryFill);
+
+	/**
+	* @brief
+	* Sets the size mode of the padding of this box.
+	*/
 	UIBox* SetPaddingSizeMode(SizeMode NewSizeMode);
+	
+	/**
+	* @brief
+	* Sets the orientation of this UIBox.
+	*/
 	UIBox* SetOrientation(Orientation NewOrientation);
+
 	Orientation GetOrientation() const;
 	bool GetTryFill() const;
 	friend UIScrollBox;
@@ -293,6 +326,14 @@ public:
 	static void RedrawUI();
 	static void ClearUI();
 	static void UpdateUI();
+	
+	/**
+	* @brief
+	* Returns true if the mouse cursor is above this box.
+	* 
+	* If another box is above this box, it will not affect the return value of this function.
+	* To check what box is actually hovered right now, use UI::HoveredBox
+	*/
 	bool IsHovered() const;
 	
 	/**
@@ -309,7 +350,15 @@ public:
 	bool HasMouseCollision = false;
 	void UpdateSelfAndChildren();
 	std::vector<UIBox*> GetChildren();
+
+	/**
+	* @brief
+	* Sets the render order index of this box.
+	* 
+	* A box with a lower order index will be drawn first.
+	*/
 	void SetRenderOrderIndex(size_t OrderIndex);
+	/// Gets the render order index of this box. See @ref UIBox::SetRenderOrderIndex()
 	size_t GetRenderOrderIndex();
 
 	static std::vector<ScrollObject*> ScrollObjects;
@@ -322,12 +371,27 @@ public:
 		static bool IsBoxOverlapping(const RedrawBox& BoxA, const RedrawBox& BoxB);
 	};
 
+	/**
+	* @brief
+	* Adds the area around this element to be redrawn the next frame.
+	*/
 	void RedrawElement();
 	static void RedrawArea(RedrawBox Box);
 
+	/**
+	* @brief
+	* Gets the parent of this UIBox.
+	*/
 	UIBox* GetParent();
 	Vector2 GetLeftRightPadding() const;
 	void GetPaddingScreenSize(Vector2& UpDown, Vector2& LeftRight) const;
+
+	/**
+	* @brief
+	* Converts a pixel size to a screen size.
+	* 
+	* Useful for calculating positions.
+	*/
 	static Vector2 PixelSizeToScreenSize(Vector2 PixelSize);
 
 	static float DpiScale;

@@ -31,7 +31,6 @@ static void HandleSignal(int SignalID)
 {
 	if (Failed)
 	{
-		Log::Print("Crash handler crashed.", Log::LogColor::Red);
 		return;
 	}
 	Failed = true;
@@ -53,6 +52,7 @@ void Error::Init()
 
 void Error::AssertFailure(std::string Name, std::string Position)
 {
+	Failed = true;
 #if !SERVER
 	OS::SetConsoleWindowVisible(true);
 	Window::DestroyWindow();

@@ -1,7 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include <Engine/Application.h>
 #include <Engine/OS.h>
-#include <Engine/Input.h>
 #include <Engine/EngineProperties.h>
 #include <Engine/Log.h>
 #include <Engine/EngineError.h>
@@ -27,20 +26,11 @@
 
 #include <Rendering/Camera/CameraShake.h>
 #include <Rendering/Framebuffer.h>
-#include <Rendering/Camera/Camera.h>
 #include <Rendering/RenderSubsystem/PostProcess.h>
 
-#include <Math/Collision/CollisionVisualize.h>
-#include <Math/Collision/Collision.h>
-
-#include <Networking/Networking.h>
-
-#include <GL/glew.h>
 #include <SDL.h>
 
 #include <iostream>
-#include <thread>
-#include <cstdint>
 
 
 namespace Application

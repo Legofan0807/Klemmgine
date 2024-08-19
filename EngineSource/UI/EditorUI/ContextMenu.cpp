@@ -455,7 +455,7 @@ void ContextMenu::OnButtonClicked(int Index)
 					{
 
 					}
-					catch (std::invalid_argument)
+					catch (std::out_of_range)
 					{
 
 					}
@@ -501,7 +501,7 @@ void ContextMenu::OnButtonClicked(int Index)
 				{
 
 				}
-				catch (std::invalid_argument)
+				catch (std::out_of_range)
 				{
 
 				}

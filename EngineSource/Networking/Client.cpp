@@ -253,7 +253,7 @@ bool Client::HandleValueUpdate(uint64_t ObjNetID, std::string Name, std::string 
 	{
 
 	}
-	catch (std::invalid_argument)
+	catch (std::out_of_range)
 	{
 
 	}

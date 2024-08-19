@@ -222,7 +222,7 @@ void ColorPicker::OnButtonClicked(int Index)
 			{
 
 			}
-			catch (std::invalid_argument)
+			catch (std::out_of_range)
 			{
 
 			}

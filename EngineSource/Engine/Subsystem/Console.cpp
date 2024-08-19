@@ -385,7 +385,7 @@ bool Console::ExecuteConsoleCommand(std::string Command)
 		{
 			Failed = true;
 		}
-		catch (std::invalid_argument)
+		catch (std::out_of_range)
 		{
 			Failed = true;
 		}

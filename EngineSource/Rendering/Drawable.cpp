@@ -218,6 +218,7 @@ void ObjectRenderContext::LoadUniform(Material::Param u)
 			break;
 		}
 	}
+	// Only stoi/stof raise exception here, and catching both 'std::invalid_argument' and 'std::out_of_range' is annoying.
 	catch (std::exception& e)
 	{
 		Log::Print(e.what(), Log::LogColor::Yellow);

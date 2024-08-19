@@ -218,7 +218,14 @@ void ColorPicker::OnButtonClicked(int Index)
 			{
 				SelectedColor.at((unsigned int)i) = std::stof(RGBTexts[i]->GetText());
 			}
-			catch (std::exception) {}
+			catch (std::invalid_argument)
+			{
+
+			}
+			catch (std::invalid_argument)
+			{
+
+			}
 		}
 		auto c = RgbToHsv(RgbColor((uint8_t)(SelectedColor.X * 255), (uint8_t)(SelectedColor.Y * 255), (uint8_t)(SelectedColor.Z * 255)));
 		SelectedHue = c.h / 255.f;

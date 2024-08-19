@@ -43,61 +43,16 @@ CubemapTab::CubemapTab(Vector3* UIColors, TextRenderer* Renderer) : EditorTab(UI
 
 void CubemapTab::Tick()
 {
-	try
-	{
-		PreviewWindow->IsVisible = TabBackground->IsVisible;
-		CubemapSidesBox->IsVisible = TabBackground->IsVisible;
-		PreviewBuffer->FramebufferCamera = Graphics::MainCamera;
-		PreviewBuffer->Active = TabBackground->IsVisible;
-		PreviewWindow->SetUseTexture(true, PreviewBuffer->GetTextureID());
-		Transform PreviousCameraTransform;
-		PreviousCameraTransform.Position = Graphics::MainCamera->Position;
-		PreviousCameraTransform.Rotation = Graphics::MainCamera->Rotation;
-		if (CameraTransform != PreviousCameraTransform && TabBackground->IsVisible)
-		{
-			CameraTransform = PreviousCameraTransform;
-		}
-	}
-	catch (std::exception& e)
-	{
-		Log::Print(e.what());
-		throw(UIRenderingException("CubemapTab", e.what()));
-	}
 }
 
 void CubemapTab::Load(std::string File)
 {
-	try
-	{
-		PreviewBuffer->GetBuffer()->ReInit((int)Graphics::WindowResolution.X, (int)Graphics::WindowResolution.Y);
-		Graphics::MainCamera->Position = Vector3(0, 4, 15);
-		Graphics::MainCamera->SetRotation(Vector3(0, -90, 0));
-		TabName->SetText("Cubemap: " + FileUtil::GetFileNameWithoutExtensionFromPath(File));
-		delete SaveFile;
-		InitialName = File;
-		SaveFile = new SaveData(InitialName.substr(0, InitialName.size() - 4), "cbm", false);
-
-		UpdatePreviewModel();
-	}
-	catch (std::exception& e)
-	{
-		Log::Print("CUBEMAP: " + std::string(e.what()));
-	}
 
 	Generate();
 }
 
 void CubemapTab::Save()
 {
-	try
-	{
-		delete SaveFile;
-		SaveFile = new SaveData(InitialName.substr(0, InitialName.size() - 4), "cbm", false);
-	}
-	catch (std::exception& e)
-	{
-		Log::Print(e.what());
-	}
 }
 
 void CubemapTab::Generate()

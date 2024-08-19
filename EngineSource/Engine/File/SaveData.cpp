@@ -424,6 +424,7 @@ std::string SaveData::Field::Serialize(size_t Depth) const
 	return str;
 }
 
+// TODO: replace std::exception with a proper exception class for SaveData.
 SaveData::Field& SaveData::Field::At(std::string Name)
 {
 	for (SaveData::Field& i : Children)

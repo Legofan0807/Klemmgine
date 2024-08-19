@@ -248,7 +248,12 @@ bool Client::HandleValueUpdate(uint64_t ObjNetID, std::string Name, std::string 
 			}
 		}
 	}
-	catch (std::exception)
+	// Errors from stoi/stof
+	catch (std::invalid_argument)
+	{
+
+	}
+	catch (std::invalid_argument)
 	{
 
 	}

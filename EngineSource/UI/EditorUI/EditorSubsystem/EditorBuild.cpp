@@ -198,9 +198,9 @@ void EditorBuild::Run()
 		}
 #endif
 	}
-	catch (std::exception& e)
+	catch (std::filesystem::filesystem_error& e)
 	{
-		Print("Exception thrown when trying to check for rebuild. " + std::string(e.what()), ErrorLevel::Error);
+		Print("Filesystem error thrown when trying to check for rebuild. " + std::string(e.what()), ErrorLevel::Error);
 		return;
 	}
 

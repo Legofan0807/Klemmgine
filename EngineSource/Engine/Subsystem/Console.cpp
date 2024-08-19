@@ -357,6 +357,7 @@ bool Console::ExecuteConsoleCommand(std::string Command)
 		}
 
 		auto& FoundVar = ConsoleSystem->ConVars[CommandVec[0]];
+		bool Failed = false;
 		try
 		{
 			switch (FoundVar.NativeType)
@@ -380,9 +381,17 @@ bool Console::ExecuteConsoleCommand(std::string Command)
 				return false;
 			}
 		}
-		catch (std::exception& e)
+		catch (std::invalid_argument)
 		{
-			ConsoleSystem->Print("Invalid type. Expected " + NativeType::TypeStrings[FoundVar.NativeType] + " (" + std::string(e.what()) + ")", ErrorLevel::Error);
+			Failed = true;
+		}
+		catch (std::invalid_argument)
+		{
+			Failed = true;
+		}
+		if (Failed)
+		{
+			ConsoleSystem->Print("Invalid type. Expected " + NativeType::TypeStrings[FoundVar.NativeType], ErrorLevel::Error);
 			return false;
 		}
 		ConsoleSystem->Print("Assigned " + FoundVar.Name + " = " + CommandVec[2]);

@@ -234,9 +234,9 @@ std::string Build::TryBuildProject(std::string TargetFolder)
 		std::filesystem::create_directories(TargetFolder);
 		return Build::TryBuildProject(TargetFolder);
 	}
-	catch (std::exception& e)
+	catch (std::filesystem::filesystem_error& e)
 	{
-		Log::Print(std::string("Build: Failure: Exception thrown: ") + e.what(), Vector3(1, 0, 0));
+		Log::Print(std::string("Build: Failure: Filesystem error: ") + e.what(), Vector3(1, 0, 0));
 		return "Error";
 	}
 }

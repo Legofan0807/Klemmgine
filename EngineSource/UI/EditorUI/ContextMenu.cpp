@@ -451,8 +451,13 @@ void ContextMenu::OnButtonClicked(int Index)
 							break;
 						}
 					}
-					catch (std::exception)
+					catch (std::invalid_argument)
 					{
+
+					}
+					catch (std::invalid_argument)
+					{
+
 					}
 					i++;
 				}
@@ -492,8 +497,13 @@ void ContextMenu::OnButtonClicked(int Index)
 						break;
 					}
 				}
-				catch (std::exception)
+				catch (std::invalid_argument)
 				{
+
+				}
+				catch (std::invalid_argument)
+				{
+
 				}
 			}
 			IteratedElement++;

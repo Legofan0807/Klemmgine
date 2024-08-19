@@ -152,46 +152,40 @@ void MaterialTab::Load(std::string File)
 
 	Filepath = File;
 	LoadedMaterial = Material();
-	try
+	LoadedMaterial = Material::LoadMaterialFile(Filepath);
+
+	std::string Path = "Shaders/" + LoadedMaterial.FragmentShader;
+	Path = Path.substr(0, Path.find_last_of("/\\"));
+
+	std::vector<Material::Param> ShaderUniforms = Preprocessor::ParseGLSL(
+		FileUtil::GetFileContent("Shaders/" + LoadedMaterial.FragmentShader),
+		Path).ShaderParams;
+	for (size_t i = 0; i < std::max(ShaderUniforms.size(), LoadedMaterial.Uniforms.size()); i++)
 	{
-		LoadedMaterial = Material::LoadMaterialFile(Filepath);
-
-		std::string Path = "Shaders/" + LoadedMaterial.FragmentShader;
-		Path = Path.substr(0, Path.find_last_of("/\\"));
-
-		std::vector<Material::Param> ShaderUniforms = Preprocessor::ParseGLSL(
-			FileUtil::GetFileContent("Shaders/" + LoadedMaterial.FragmentShader),
-			Path).ShaderParams;
-		for (size_t i = 0; i < std::max(ShaderUniforms.size(), LoadedMaterial.Uniforms.size()); i++)
+		if (ShaderUniforms.size() <= i)
 		{
-			if (ShaderUniforms.size() <= i)
-			{
-				LoadedMaterial.Uniforms.erase(LoadedMaterial.Uniforms.begin() + i, LoadedMaterial.Uniforms.end());
-				break;
-			}
-			if (LoadedMaterial.Uniforms.size() <= i)
-			{
-				LoadedMaterial.Uniforms.push_back(ShaderUniforms[i]);
-			}
-			else if (LoadedMaterial.Uniforms[i].UniformName != ShaderUniforms[i].UniformName
-					|| LoadedMaterial.Uniforms[i].NativeType != ShaderUniforms[i].NativeType)
-			{
-				LoadedMaterial.Uniforms[i] = ShaderUniforms[i];
-			}
-			else
-			{
-				LoadedMaterial.Uniforms[i].Description = ShaderUniforms[i].Description;
-			}
+			LoadedMaterial.Uniforms.erase(LoadedMaterial.Uniforms.begin() + i, LoadedMaterial.Uniforms.end());
+			break;
 		}
+		if (LoadedMaterial.Uniforms.size() <= i)
+		{
+			LoadedMaterial.Uniforms.push_back(ShaderUniforms[i]);
+		}
+		else if (LoadedMaterial.Uniforms[i].UniformName != ShaderUniforms[i].UniformName
+			|| LoadedMaterial.Uniforms[i].NativeType != ShaderUniforms[i].NativeType)
+		{
+			LoadedMaterial.Uniforms[i] = ShaderUniforms[i];
+		}
+		else
+		{
+			LoadedMaterial.Uniforms[i].Description = ShaderUniforms[i].Description;
+		}
+	}
 
-		GenerateUI();
-		GenerateMaterialProperties();
-	}
-	catch (std::exception& e)
-	{
-		Log::Print(e.what(), Vector3(0.8f, 0.f, 0.f));
-	}
+	GenerateUI();
+	GenerateMaterialProperties();
 }
+
 void MaterialTab::OnResized()
 {
 	Rows[0]->SetMinSize(Vector2(Scale.X - 0.3f, Scale.Y));

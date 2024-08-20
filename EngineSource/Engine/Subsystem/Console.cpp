@@ -305,7 +305,8 @@ Console::Console()
 	RegisterCommand(Command("crash", []()
 		{
 			abort();
-		}, {  }));
+		},
+		{  }));
 
 #if _WIN32
 	ReadConsoleThread = std::thread(ReadConsole);

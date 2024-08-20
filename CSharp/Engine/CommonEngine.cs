@@ -155,7 +155,7 @@ namespace Engine
 			/// The normal vector of the collision.
 			public Vector3 Normal;
 
-			/// Gets the object that was hit, in the form of a C# object class..
+			/// Gets the object that was hit, in the form of a C# object class.
 			public readonly SceneObject GetHitObject()
 			{
 				if (!Hit)

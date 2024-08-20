@@ -11,6 +11,7 @@
 #include <Engine/Stats.h>
 #include <Engine/Subsystem/Console.h>
 #include <Engine/AppWindow.h>
+#include <Engine/Log.h>
 
 static void GLAPIENTRY MessageCallback(
 	GLenum source,
@@ -26,7 +27,7 @@ static void GLAPIENTRY MessageCallback(
 		|| type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR
 		|| type == GL_DEBUG_TYPE_PORTABILITY)
 	{
-		Subsystem::GetSubsystemByName("Renderer")->Print(std::string(message) + " - " + Stats::EngineStatus, Subsystem::ErrorLevel::Error);
+		Log::Print(std::string(message) + " - " + Stats::EngineStatus, Log::LogColor::Red);
 	}
 }
 

@@ -101,7 +101,6 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 	{
 		if (GravityPass)
 		{
-			Log::Print("no angle");
 			GroundedTimer = 5;
 			GroundNormal = HitNormal;
 			StoodOn = Hits[0].HitComponent;

@@ -101,6 +101,7 @@ Vector3 MoveComponent::TryMove(Vector3 Direction, Vector3 InitialDirection, Vect
 	{
 		if (GravityPass)
 		{
+			Log::Print("no angle");
 			GroundedTimer = 5;
 			GroundNormal = HitNormal;
 			StoodOn = Hits[0].HitComponent;
@@ -229,7 +230,7 @@ void MoveComponent::Update()
 	auto Hits = CollisionBody->CollisionTest(CollideStatic ? Physics::Layer::Static : Physics::Layer::Dynamic, { GetParent() });
 	for (auto& h : Hits)
 	{
-		GetParent()->GetTransform().Position += h.Normal * h.Depth;
+	//	GetParent()->GetTransform().Position += h.Normal * h.Depth;
 	}
 }
 

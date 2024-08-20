@@ -20,7 +20,7 @@ void StrUtil::ReplaceChar(std::string& Target, char A, std::string b)
 
 std::string StrUtil::Format(std::string Format, ...)
 {
-	int Size = (int)Format.size() + 50, NewSize = Size;
+	size_t Size = Format.size() + 50, NewSize = Size;
 	char* Buffer = nullptr;
 	do
 	{

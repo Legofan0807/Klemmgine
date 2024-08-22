@@ -60,6 +60,8 @@ void ParticleComponent::LoadParticle(std::string Name)
 		auto ParticleData = Particles::ParticleEmitter::LoadParticleFile(File, ElementMaterials);
 		for (unsigned int i = 0; i < ParticleData.size(); i++)
 		{
+			if (ElementMaterials.size() <= i)
+				break;
 			Emitter->AddElement(ParticleData[i], Material::LoadMaterialFile(ElementMaterials[i]));
 		}
 	}

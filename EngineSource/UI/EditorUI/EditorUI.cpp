@@ -1,14 +1,10 @@
 ﻿#ifdef EDITOR
 #include "EditorUI.h"
 #include "Engine/Utility/FileUtility.h"
-#include <Objects/CSharpObject.h>
 #include <filesystem>
-#include "Math/Math.h"
-#include "Math/Collision/Collision.h"
 #include "Engine/Subsystem/Scene.h"
 #include <Engine/EngineProperties.h>
 #include <UI/UIScrollBox.h>	
-#include <UI/EditorUI/UIVectorField.h>
 #include <UI/EditorUI/LogUI.h>
 #include <UI/EditorUI/Toolbar.h>
 #include <UI/EditorUI/AssetBrowser.h>
@@ -19,20 +15,15 @@
 #include <UI/EditorUI/ContextMenu.h>
 #include <atomic>
 #include <thread>
-#include <Engine/Log.h>
-#include <Engine/Subsystem/BackgroundTask.h>
 #include <Engine/Input.h>
 #include <UI/EditorUI/Popups/DialogBox.h>
 #include <Engine/Subsystem/Console.h>
-#include <Engine/Subsystem/NetworkSubsystem.h>
 #include <Rendering/RenderSubsystem/BakedLighting.h>
 #include <Engine/File/Assets.h>
-#include <UI/UIDropdown.h>
 #include <SDL.h>
 #include <Rendering/Texture/Texture.h>
 #include <Engine/Application.h>
 #include <UI/EditorUI/SettingsPanel.h>
-#include <Networking/Networking.h>
 #include <UI/EditorUI/SerializePanel.h>
 #include <Engine/Utility/StringUtility.h>
 
@@ -151,6 +142,7 @@ void EditorUI::SaveCurrentScene()
 	EditorPanel::UpdateAllInstancesOf<ObjectList>();
 }
 
+
 void EditorUI::OpenScene(std::string NewScene)
 {
 	if (ChangedScene)
@@ -180,7 +172,8 @@ void EditorUI::OpenScene(std::string NewScene)
 			});
 		return;
 	}
-	ChangedScene = false; 
+
+	ChangedScene = false;
 	Scene::LoadNewScene(NewScene, true);
 
 	EditorUI::SelectedObjects.clear();

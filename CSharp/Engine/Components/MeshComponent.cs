@@ -37,9 +37,9 @@ public class MeshComponent : ObjectComponent
 		}
 		if (!NativePtr.Equals(new IntPtr()))
 		{
-			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), new object[] { NativePtr, Parent.NativePtr });
+			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [NativePtr, Parent.NativePtr]);
 		}
-		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewMeshComponent", typeof(NewModel), new object[] { File, Parent.NativePtr });
+		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewMeshComponent", typeof(NewModel), [File, Parent.NativePtr]);
 	}
 
 	public override void Tick()

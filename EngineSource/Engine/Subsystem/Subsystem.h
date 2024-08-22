@@ -55,7 +55,7 @@ public:
 		Warn,
 		/// Error level. Red color.
 		Error,
-		/// Note level. Gray color, only printed if the command arguments contain -verbose.
+		/// Note level. Gray color, only printed if the command line arguments contain -verbose.
 		Note
 	};
 

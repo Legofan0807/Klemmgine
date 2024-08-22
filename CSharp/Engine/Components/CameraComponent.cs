@@ -22,7 +22,7 @@ public class CameraComponent : ObjectComponent
 	public CameraComponent()
 	{
 	}
-	
+
 
 	/// Uses the camera, making it the currently active one.
 	public void Use()
@@ -31,15 +31,15 @@ public class CameraComponent : ObjectComponent
 		{
 			return;
 		}
-		NativeFunction.CallNativeFunction("UseCamera", typeof(UseCamera), [ NativePtr ]);
+		NativeFunction.CallNativeFunction("UseCamera", typeof(UseCamera), [NativePtr]);
 	}
 
 	/// The field of view of the camera in degrees.
 	public float FOV
-	{ 
+	{
 		get
 		{
-			return (float)NativeFunction.CallNativeFunction("GetCameraFOV", typeof(GetCameraFOV), [ NativePtr ]);
+			return (float)NativeFunction.CallNativeFunction("GetCameraFOV", typeof(GetCameraFOV), [NativePtr]);
 		}
 		set
 		{
@@ -56,10 +56,10 @@ public class CameraComponent : ObjectComponent
 
 		if (!NativePtr.Equals(new IntPtr()))
 		{
-			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [ NativePtr, Parent.NativePtr ]);
+			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [NativePtr, Parent.NativePtr]);
 		}
 
-		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewCameraComponent", typeof(NewCamera), [ 70, Parent.NativePtr ]);
+		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewCameraComponent", typeof(NewCamera), [70, Parent.NativePtr]);
 	}
 
 	public override void Tick()

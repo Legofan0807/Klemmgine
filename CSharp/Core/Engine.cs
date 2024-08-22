@@ -47,7 +47,7 @@ public struct EngineTransform
 
 static class Engine
 {
-	public static Assembly? LoadedAsm = null;
+	public static Assembly? GameAssembly = null;
 	static Int64 CurrentObjectIndex = 0;
 	static Type? StatsObject = null;
 	static Type? InputObject = null;
@@ -93,12 +93,13 @@ static class Engine
 		{
 			LoadTypeFromAssembly("Engine.Native.NativeFunction")?.GetMethod("UnloadAll")?.Invoke(null, null);
 		}
-		LoadedAsm = Assembly.Load(File.ReadAllBytes(Path));
+		GameAssembly = Assembly.Load(File.ReadAllBytes(Path));
 		LoadTypeFromAssembly("Engine.Log")!.GetMethod("LoadLogFunction")!.Invoke(null, [new Action<string, int>(EngineLog.Print)]);
 
 
-		var SceneObjectType = LoadTypeFromAssembly("Engine.SceneObject");
+		Type SceneObjectType = LoadTypeFromAssembly("Engine.SceneObject")!;
 
+		var t = typeof(Type);
 		if (SceneObjectType == null)
 		{
 			EngineLog.Print("Could not load SceneObject class.");
@@ -111,9 +112,9 @@ static class Engine
 			(object)GetObjectFromPtr
 		});
 
-		foreach (var i in LoadedAsm.GetTypes())
+		foreach (Type i in GameAssembly.GetTypes())
 		{
-			if (i.IsSubclassOf(SceneObjectType!))
+			if (i.IsSubclassOf(SceneObjectType))
 			{
 				SceneObjectTypes.Add(i);
 			}
@@ -167,7 +168,7 @@ static class Engine
 
 	public static Type? LoadTypeFromAssembly(string Type)
 	{
-		if (LoadedAsm == null)
+		if (GameAssembly == null)
 		{
 			EngineLog.Print("Tried to call method while the C# assembly is unloaded!", 2);
 			return null;
@@ -399,12 +400,12 @@ static class Engine
 
 	public static void SetVectorFieldOfObject(Int32 ID, [MarshalAs(UnmanagedType.LPUTF8Str)] string Field, EngineVector NewValue)
 	{
-		if (!SceneObjects.ContainsKey(ID))
+		if (!SceneObjects.TryGetValue(ID, out object? obj))
 		{
 			EngineLog.Print(string.Format("Tried to access {1} of object with ID {0} but that object doesn't exist!", ID, Field));
 			return;
 		}
-		var obj = SceneObjects[ID];
+
 		if (obj == null)
 		{
 			return;

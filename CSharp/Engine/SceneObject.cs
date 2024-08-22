@@ -61,8 +61,6 @@ public abstract class SceneObject
 	private static Delegate GetCSObjectDelegate;
 	private static Delegate GetCSObjectByPtrDelegate;
 
-	private static readonly Dictionary<IntPtr, SceneObject> Objects = [];
-
 	[return: MarshalAs(UnmanagedType.LPUTF8Str)]
 	public string GetEditorProperties()
 	{

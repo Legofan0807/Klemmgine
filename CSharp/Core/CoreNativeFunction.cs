@@ -6,15 +6,15 @@ namespace Engine.Core;
 
 public static class CoreNativeFunction
 {
-	static Dictionary<string, IntPtr> LoadedNativeFunctions = new Dictionary<string, IntPtr>();
+	static readonly Dictionary<string, IntPtr> LoadedNativeFunctions = [];
 
 	public static void RegisterNativeFunction([MarshalAs(UnmanagedType.LPUTF8Str)] string Name, IntPtr FunctionPtr)
 	{
-		if (Engine.LoadedAsm == null)
+		if (Engine.GameAssembly == null)
 		{
 			return;
 		}
-		Engine.LoadTypeFromAssembly("Engine.Native.NativeFunction")!.GetMethod("RegisterNativeFunction")!.Invoke(null, new object[] { Name, FunctionPtr });
+		Engine.LoadTypeFromAssembly("Engine.Native.NativeFunction")!.GetMethod("RegisterNativeFunction")!.Invoke(null, [Name, FunctionPtr]);
 		LoadedNativeFunctions.Add(Name, FunctionPtr);
 	}
 

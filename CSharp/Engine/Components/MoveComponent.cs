@@ -80,7 +80,7 @@ public class MoveComponent : ObjectComponent
 		}
 	}
 
-	/// The air acceleration multiplier. If the movement is in air, both acceleration and deceleration will be multipled with this value.
+	/// The air acceleration multiplier. If the movement is in air, both acceleration and deceleration will be multiplied with this value.
 	public float AirAccel
 	{
 		set

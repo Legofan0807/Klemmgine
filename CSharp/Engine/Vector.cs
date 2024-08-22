@@ -44,7 +44,7 @@ public struct Vector3
 		return MathF.Sqrt(X * X + Y * Y + Z * Z);
 	}
 
-	public Vector3 Normalized()
+	public readonly Vector3 Normalized()
 	{
 		float Len = Length();
 		if (Len != 0)
@@ -110,11 +110,7 @@ public struct Vector3
 		return (Vector3)NativeFunction.CallNativeFunction(
 			"Vector3::GetScaledAxis",
 			typeof(VecScaledAxis),
-			new object[] 
-			{ 
-				Rot / 180 * MathF.PI,
-				(UInt32)Dir 
-			});
+			[Rot / 180 * MathF.PI, (UInt32)Dir]);
 	}
 
 	public static Vector3 GetForwardVector(Vector3 Rotation)

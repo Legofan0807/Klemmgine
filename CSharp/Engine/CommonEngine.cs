@@ -55,7 +55,7 @@ namespace Engine
 
 		public static void PlayCameraShake(float Intensity)
 		{
-			NativeFunction.CallNativeFunction("PlayDefaultCameraShake", typeof(CameraShakeDelegate), new object[] { Intensity });
+			NativeFunction.CallNativeFunction("PlayDefaultCameraShake", typeof(CameraShakeDelegate), [Intensity]);
 		}
 	}
 
@@ -76,7 +76,7 @@ namespace Engine
 		 */
 		public static bool Execute(string Command)
 		{
-			return (bool)NativeFunction.CallNativeFunction("CallConsoleCommand", typeof(CommandDelegate), new object[] { Command });
+			return (bool)NativeFunction.CallNativeFunction("CallConsoleCommand", typeof(CommandDelegate), [Command]);
 		}
 	}
 
@@ -149,9 +149,9 @@ namespace Engine
 			/// The distance the collision ray has traveled, from 0 - 1. If the collision is not a RayCast or ShapeCast, this can be ignored.
 			public float Distance;
 			/// The object that was hit.
-			private IntPtr HitObject;
+			private readonly IntPtr HitObject;
 			/// The component that was hit.
-			private IntPtr HitComponent;
+			private readonly IntPtr HitComponent;
 			/// The normal vector of the collision.
 			public Vector3 Normal;
 
@@ -173,7 +173,7 @@ namespace Engine
 		 * @param Start
 		 * The start position of the ray.
 		 * @param End
-		 * The end positionof the ray.
+		 * The end position of the ray.
 		 * @param ObjectsToIgnore
 		 * Colliders that belong to these objects should be ignored.
 		 */
@@ -194,7 +194,7 @@ namespace Engine
 				}
 			}
 
-			return (HitResponse)NativeFunction.CallNativeFunction("NativeRaycast", typeof(LineTraceDelegate), [ Start, End, ComponentPtrs, ComponentPtrs.Length ]);
+			return (HitResponse)NativeFunction.CallNativeFunction("NativeRaycast", typeof(LineTraceDelegate), [Start, End, ComponentPtrs, ComponentPtrs.Length]);
 		}
 	}
 
@@ -242,7 +242,7 @@ namespace Engine
 		 */
 		public static void LoadScene(string SceneName)
 		{
-			NativeFunction.CallNativeFunction("LoadScene", typeof(LoadSceneDelegate), new object[] { SceneName });
+			NativeFunction.CallNativeFunction("LoadScene", typeof(LoadSceneDelegate), [SceneName]);
 		}
 	}
 
@@ -259,21 +259,19 @@ namespace Engine
 			{
 				BufferPtr = Buffer;
 			}
+			public SoundBuffer(string File)
+			{
+				BufferPtr = (IntPtr)NativeFunction.CallNativeFunction("LoadSound", typeof(LoadSoundDelegate), [File]);
+			}
 
 			public void Play(float Pitch = 1, float Volume = 1, bool Looping = false)
 			{
-				NativeFunction.CallNativeFunction("PlaySound", typeof(PlaySound), new object[] { BufferPtr, Pitch, Volume, Looping });
+				NativeFunction.CallNativeFunction("PlaySound", typeof(PlaySound), [BufferPtr, Pitch, Volume, Looping]);
 			}
 			~SoundBuffer()
 			{
-				NativeFunction.CallNativeFunction("UnloadSound", typeof(UnloadSoundDelegate), new object[] { BufferPtr });
+				NativeFunction.CallNativeFunction("UnloadSound", typeof(UnloadSoundDelegate), [BufferPtr]);
 			}
-		}
-
-		public static SoundBuffer LoadSound(string File)
-		{
-			IntPtr BufferPtr = (IntPtr)NativeFunction.CallNativeFunction("LoadSound", typeof(LoadSoundDelegate), new object[] { File });
-			return new SoundBuffer(BufferPtr);
 		}
 	}
 }

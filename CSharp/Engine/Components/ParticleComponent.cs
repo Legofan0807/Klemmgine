@@ -16,9 +16,9 @@ public class ParticleComponent : ObjectComponent
 		}
 		if (!NativePtr.Equals(new IntPtr()))
 		{
-			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [ NativePtr, Parent.NativePtr ]);
+			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [NativePtr, Parent.NativePtr]);
 		}
-		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewParticleComponent", typeof(NewParticle), [ FileName, Parent.NativePtr ]);
+		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewParticleComponent", typeof(NewParticle), [FileName, Parent.NativePtr]);
 	}
 
 	public override void Tick()

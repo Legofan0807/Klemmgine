@@ -24,7 +24,7 @@ public class CollisionComponent : ObjectComponent
 			{
 				return (Collision.HitResponse)NativeFunction.CallNativeFunction("CollisionComponentOverlap",
 					typeof(CollisionCheckDelegate),
-					new object[] { new IntPtr[] { new() }, 0, NativePtr });
+					[new IntPtr[] { new() }, 0, NativePtr]);
 
 			}
 			IntPtr[] ComponentPtrs = new IntPtr[ComponentsToIgnore.Length];
@@ -36,7 +36,7 @@ public class CollisionComponent : ObjectComponent
 
 			return (Collision.HitResponse)NativeFunction.CallNativeFunction("CollisionComponentOverlap",
 				typeof(CollisionCheckDelegate),
-				new object[] { ComponentPtrs, ComponentPtrs.Length, NativePtr });
+				[ComponentPtrs, ComponentPtrs.Length, NativePtr]);
 		}
 		return new Collision.HitResponse();
 	}
@@ -50,10 +50,10 @@ public class CollisionComponent : ObjectComponent
 
 		if (!NativePtr.Equals(new IntPtr()))
 		{
-			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), new object[] { NativePtr, Parent.NativePtr });
+			NativeFunction.CallNativeFunction("DestroyComponent", typeof(DestroyComponent), [NativePtr, Parent.NativePtr]);
 		}
 
-		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewCollisionComponent", typeof(NewCollider), new object[] { File, Parent.NativePtr });
+		NativePtr = (IntPtr)NativeFunction.CallNativeFunction("NewCollisionComponent", typeof(NewCollider), [File, Parent.NativePtr]);
 	}
 
 	public override void Tick()

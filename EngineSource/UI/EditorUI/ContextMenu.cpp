@@ -551,10 +551,10 @@ void ContextMenu::OnResized()
 		}
 
 		BackgroundBox->AddChild((new UIText(0.55f, EditorUI::UIColors[2], "Object: " + SelectedObject->Name, EditorUI::Text))
-			->SetWrapEnabled(true, Scale.X - 0.1f, UIBox::SizeMode::ScreenRelative)
+			->SetWrapEnabled(true, Scale.X - 0.04f, UIBox::SizeMode::ScreenRelative)
 			->SetPadding(0.01f, 0, 0.01f, 0.01f));
 		BackgroundBox->AddChild((new UIText(0.45f, EditorUI::UIColors[2], "Class: " + SelectedObject->GetObjectDescription().Name, EditorUI::Text))
-			->SetWrapEnabled(true, Scale.X - 0.1f, UIBox::SizeMode::ScreenRelative)
+			->SetWrapEnabled(true, Scale.X - 0.04f, UIBox::SizeMode::ScreenRelative)
 			->SetPadding(0.005f, 0, 0.01f, 0.01f));
 		BackgroundBox->AddChild((new UIBackground(UIBox::Orientation::Horizontal,
 			0,

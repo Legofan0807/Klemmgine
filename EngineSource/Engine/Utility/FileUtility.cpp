@@ -48,7 +48,7 @@ namespace FileUtil
 		delete[] szTo;
 		return strTo;
 #else
-		return "Function not supported on Linux";
+		return "";
 #endif
 	}
 

@@ -79,21 +79,21 @@ void Input::HandleGamepadEvent(void* EventPtr)
 		case 0:
 			if (Axis == 0)
 			{
-				g.LeftStickPosition.X = AxisVal / 2.0f;
+				g.LeftStickPosition.X = AxisVal;
 			}
 			else
 			{
-				g.LeftStickPosition.Y = -AxisVal / 2.0f;
+				g.LeftStickPosition.Y = -AxisVal;
 			}
 			break;
 		case 1:
 			if (Axis == 0)
 			{
-				g.RightStickPosition.X = AxisVal / 2.0f;
+				g.RightStickPosition.X = AxisVal;
 			}
 			else
 			{
-				g.RightStickPosition.Y = -AxisVal / 2.0f;
+				g.RightStickPosition.Y = -AxisVal;
 			}
 			break;
 		case 2:

@@ -27,7 +27,7 @@ public class CameraComponent : ObjectComponent
 	/// Uses the camera, making it the currently active one.
 	public void Use()
 	{
-		if (NativePtr.Equals(new IntPtr()))
+		if (NativePtr == 0)
 		{
 			return;
 		}

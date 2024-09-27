@@ -7,7 +7,7 @@ DialogBox::DialogBox(std::string Title, Vector2 Position, std::string Message, s
 	: EditorPopup(Position, 0.3f, Title)
 {
 	PopupBackground->AddChild((new UIText(0.45f, EditorUI::UIColors[2], Message, EditorUI::Text))
-		->SetWrapEnabled(true, (PopupBackground->GetMinSize().X - 0.1f), UIBox::SizeMode::ScreenRelative)
+		->SetWrapEnabled(true, (PopupBackground->GetMinSize().X - 0.03f), UIBox::SizeMode::ScreenRelative)
 		->SetPadding(0.01f));
 	SetOptions(Answers);
 }

@@ -149,7 +149,6 @@ void MaterialTab::Tick()
 
 void MaterialTab::Load(std::string File)
 {
-
 	Filepath = File;
 	LoadedMaterial = Material();
 	LoadedMaterial = Material::LoadMaterialFile(Filepath);

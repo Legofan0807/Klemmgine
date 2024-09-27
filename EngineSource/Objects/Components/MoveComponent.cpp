@@ -229,7 +229,7 @@ void MoveComponent::Update()
 	auto Hits = CollisionBody->CollisionTest(CollideStatic ? Physics::Layer::Static : Physics::Layer::Dynamic, { GetParent() });
 	for (auto& h : Hits)
 	{
-	//	GetParent()->GetTransform().Position += h.Normal * h.Depth;
+		GetParent()->GetTransform().Position += h.Normal * h.Depth;
 	}
 }
 

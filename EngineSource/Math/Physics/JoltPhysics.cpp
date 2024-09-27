@@ -592,6 +592,7 @@ std::vector<Physics::HitResult> JoltPhysics::CollisionTest(Physics::PhysicsBody*
 	auto JoltShape = static_cast<BodyCreationSettings*>(Body->ShapeInfo);
 
 	Transform t = Body->BodyTransform;
+	t.Scale = 1;
 	glm::mat4 mat = t.ToMatrix();
 
 	Mat44 ResultMat = Mat44(ToJPHVec4(mat[0]), ToJPHVec4(mat[1]), ToJPHVec4(mat[2]), ToJPHVec4(mat[3]));
@@ -605,7 +606,9 @@ std::vector<Physics::HitResult> JoltPhysics::CollisionTest(Physics::PhysicsBody*
 	BodyFilterImpl ObjF;
 	ObjF.ObjectsToIgnore = &ObjectsToIgnore;
 
-	System->GetNarrowPhaseQuery().CollideShape(JoltShape->GetShape(), ToJPHVec3(t.Scale), ResultMat, Settings, Vec3(), cl, BplF, LayerF, ObjF);
+	Vec3 ObjectScale = ToJPHVec3(1);
+
+	System->GetNarrowPhaseQuery().CollideShape(JoltShape->GetShape(), ObjectScale, ResultMat, Settings, Vec3(), cl, BplF, LayerF, ObjF);
 	
 	return cl.Hits;
 }

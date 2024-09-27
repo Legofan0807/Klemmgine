@@ -15,9 +15,13 @@ void EditorPopup::SetOptions(std::vector<PopupOption> NewOptions)
 		OptionsList->AddChild(
 			(new UIButton(UIBox::Orientation::Horizontal, 0, EditorUI::UIColors[2], this, (int)i))
 			->SetPadding(0.005f)
-			->SetBorder(UIBox::BorderType::Rounded, 0.2f)
+			->SetPaddingSizeMode(UIBox::SizeMode::AspectRelative)
+			->SetMinSize(Vector2(0.075f, 0))
+			->SetSizeMode(UIBox::SizeMode::AspectRelative)
+			->SetHorizontalAlign(UIBox::Align::Centered)
 			->AddChild((new UIText(0.4f, 1 - EditorUI::UIColors[2], Options[i].Name, EditorUI::Text))
-				->SetPadding(0.005f)));
+				->SetPadding(0.0075f)
+				->SetPaddingSizeMode(UIBox::SizeMode::AspectRelative)));
 	}
 }
 
@@ -56,7 +60,7 @@ EditorPopup::EditorPopup(Vector2 Position, Vector2 Scale, std::string Name)
 			->SetPadding(1, 0, 1, 1)
 			->SetPaddingSizeMode(UIBox::SizeMode::PixelRelative)
 			->SetVerticalAlign(UIBox::Align::Centered)
-			->AddChild((new UIText(0.5f, EditorUI::UIColors[2], Name, EditorUI::Text))
+			->AddChild((new UIText(0.45f, EditorUI::UIColors[2], Name, EditorUI::Text))
 				->SetPadding(0, 0, 0.01f, 0.01f)))
 		->AddChild(PopupBackground
 			->SetPadding(0, 0, 1, 1)

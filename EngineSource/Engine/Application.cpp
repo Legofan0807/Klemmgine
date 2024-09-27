@@ -20,6 +20,8 @@
 #include <Engine/Subsystem/BackgroundTask.h>
 #include <Engine/Subsystem/Scene.h>
 
+#include <Networking/Networking.h>
+
 #include <UI/UIBox.h>
 #include <UI/EditorUI/EditorUI.h>
 #include <UI/Debug/DebugUI.h>
@@ -31,7 +33,6 @@
 #include <SDL.h>
 
 #include <iostream>
-
 
 namespace Application
 {

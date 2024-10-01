@@ -5,6 +5,7 @@
 ### Fixes
 
 - Code cleanup, stability improvements.
+- Updated GitHub workflow to use actions/download-artifact@v4
 
 ## Version 1.14.1
 

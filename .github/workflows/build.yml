@@ -90,7 +90,7 @@ jobs:
           cp -rf ./ProjectGenerator Release
           cp -rf ./Docs Release/Docs
     - name: upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:

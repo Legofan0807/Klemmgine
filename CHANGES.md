@@ -12,7 +12,7 @@
 ### Changes
 
 - Improved thread creation for baking lighting.
-- Added CameraComponent::IsUsed(), CameraComponent::GetForwardFromScreenPosition(), CameraComponent::WorldToScreenPos()
+- Added `CameraComponent::IsUsed()`, `CameraComponent::GetForwardFromScreenPosition()`, `CameraComponent::WorldToScreenPos()`
 
 ### Fixes
 
